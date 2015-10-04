@@ -1,0 +1,15 @@
+run sense2group_on_answers.py
+then combined_mul_keys.py
+then change_first_token_to_subject.py
+
+
+answer key, and sensemap, is in ../answers+misc/tasks/english-group-lex-sample/key
+
+./scorer.bash resultDir/all.combined.amended.result answers+misc/tasks/english-lex-sample/key
+or
+python score ../../resultDir/all.combined.amended.result ../tasks/english-lex-sample/key ../tasks/english-lex-sample/sensemap
+
+
+
+use scorer in ../answers+misc/score
+

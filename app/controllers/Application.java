@@ -127,6 +127,7 @@ public class Application extends Controller {
 
         for (String token : wordsThatCanBeTranslated) {
             Element lexelt = doc.createElement("lexelt");
+            lexelt.setAttribute("item", token);
             rootElement.appendChild(lexelt);
             // lexelt.setAttribute("item", );
 

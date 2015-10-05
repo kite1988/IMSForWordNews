@@ -146,7 +146,7 @@ public class Application extends Controller {
             Element context = doc.createElement("context");
             instance.appendChild(context);
             String amendedTextContent = textContent.replaceFirst(token, testFlag + token);
-            context.setTextContent(amendedTextContent);
+            context.setTextContent(" " + amendedTextContent + " ");
         }
 
         String testTempFileName = "temptestfile";

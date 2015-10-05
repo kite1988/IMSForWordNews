@@ -90,7 +90,7 @@ public class Application extends Controller {
         List<File> heh = Arrays.asList(a);
         System.out.println(heh.get(0).getAbsolutePath());
         BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new GZIPInputStream(new FileInputStream(heh.get(0))), "ISO8859-1"));
+                new GZIPInputStream(new FileInputStream(heh.get(0).getCanonicalPath())), "ISO8859-1"));
 
         String line ;
         int count = 0;

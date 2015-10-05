@@ -270,7 +270,7 @@ public class Application extends Controller {
         COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
         //List<File> testFiles = new ArrayList<>();
-
+        System.out.println("going to execute tester!");
         tester.test(testFileName);
 
 
@@ -305,6 +305,7 @@ public class Application extends Controller {
 
             fileInDirectory.delete();
         }
+        System.out.println("bef return");
 
         return ok(result);
     }

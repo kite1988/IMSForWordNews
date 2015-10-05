@@ -222,7 +222,7 @@ public class Application extends Controller {
 
         CTester tester = new CTester();
         String type = "file";
-        File testPath = new File("generated_ims_format_text.xml");
+        //File testPath = new File("generated_ims_format_text.xml");
         String modelDir = "trainedDir";
         String statDir = "trainedDir";
         String saveDir = "resultDir";
@@ -272,6 +272,8 @@ public class Application extends Controller {
         //List<File> testFiles = new ArrayList<>();
         System.out.println("going to execute tester!");
         tester.test(testFileName);
+        tester.write();
+        tester.clear();
 
 
         // read from results dir

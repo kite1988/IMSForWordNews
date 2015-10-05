@@ -298,9 +298,15 @@ public class Application extends Controller {
 
                 fileLen ++;
                 String[] tokensInResultsLine = lineFromResultFile.split(" ");
-                long senseId = Long.parseLong(tokensInResultsLine[1]);
+                long senseId = -1;
+                try {
+                    senseId = Long.parseLong(tokensInResultsLine[2]);
+                    result.put("senseid", senseId);
+                } catch (NumberFormatException e) {
+                    // silenced because it is U
+                    assert tokensInResultsLine[2].equals("U");
+                }
 
-                result.put("senseid", senseId);
             }
 
             System.out.println("len: " + fileLen);

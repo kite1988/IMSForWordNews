@@ -266,7 +266,7 @@ public class Application extends Controller {
 
         //List<File> testFiles = new ArrayList<>();
 
-        tester.test(new File(testFileName).getAbsolutePath());
+        tester.test(testFileName);
 
 
         // read from results dir

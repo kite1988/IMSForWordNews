@@ -287,7 +287,7 @@ public class Application extends Controller {
             while ((lineFromResultFile = bufferedReader.readLine()) != null) {
                 fileLen ++;
                 String[] tokensInResultsLine = lineFromResultFile.split(" ");
-                long senseId = Long.parseLong(tokensInResultsLine[2]);
+                long senseId = Long.parseLong(tokensInResultsLine[1]);
 
                 result.put("senseid", senseId);
             }

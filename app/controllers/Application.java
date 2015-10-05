@@ -8,6 +8,7 @@ import play.libs.Json;
 import play.mvc.*;
 import play.api.db.*;
 
+import play.mvc.Result;
 import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
 import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombinationWithSenna;
 import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
@@ -26,10 +27,10 @@ import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -68,7 +69,7 @@ public class Application extends Controller {
                 System.out.println(queryRes);
                 System.out.println(queryRes);
                 System.out.println(queryRes);
-                if (queryRes.getBoolean("BOOLEAN")) {
+                if (queryRes.getBoolean(1)) {
                     return true;
                 }
 
@@ -82,11 +83,11 @@ public class Application extends Controller {
         return false;
     }
 
-    public Result obtainTranslation() throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, JWNLException, ParserConfigurationException, SQLException {
+    public Result obtainTranslation() throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, JWNLException, ParserConfigurationException, SQLException, TransformerException {
 
         // extract request params
         final Map<String, String[]> values = request().body().asFormUrlEncoded();
-        String text = values.get("text")[0];
+        String textContent = values.get("textContent")[0];
         String name = values.get("name")[0];
         String url = values.get("url")[0];
         String num_words = values.get("num_words")[0];
@@ -97,7 +98,7 @@ public class Application extends Controller {
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
-        String[] tokensInText = text.split(" ");
+        String[] tokensInText = textContent.split(" ");
         for (String token : tokensInText ) {
             try {
                 if (isWordInDictionary(token)) {
@@ -124,12 +125,47 @@ public class Application extends Controller {
         doc.appendChild(rootElement);
         rootElement.setAttribute("lang", "english");
 
-        Element lexelt = doc.createElement("lexelt");
-        rootElement.appendChild(lexelt);
-       // lexelt.setAttribute("item", );
+        for (String token : tokensInText) {
+            Element lexelt = doc.createElement("lexelt");
+            rootElement.appendChild(lexelt);
+            // lexelt.setAttribute("item", );
 
+            Element instance = doc.createElement("instance");
+            lexelt.appendChild(instance);
 
+            String instanceId = token + ".0";
+            instance.setAttribute("id", instanceId);
+            instance.setAttribute("docsrc", "dummy");
 
+            Element answer = doc.createElement("answer");
+            answer.setAttribute("instance", instanceId);
+            answer.setAttribute("senseid", "dunno"); // because we are trying to find that out!!!
+
+            Element context = doc.createElement("context");
+            context.setTextContent(textContent);
+        }
+
+        // write to xml
+        try {
+            Transformer tr = TransformerFactory.newInstance().newTransformer();
+            tr.setOutputProperty(OutputKeys.INDENT, "yes");
+            tr.setOutputProperty(OutputKeys.METHOD, "xml");
+            tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "roles.dtd");
+            tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+            // send DOM to file
+
+            tr.transform(new DOMSource(doc),
+                         new StreamResult(new FileOutputStream("temptestfile")));
+
+        } catch (TransformerException te) {
+            System.out.println(te.getMessage());
+            throw te;
+        } catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+            throw ioe;
+        }
 
 
         // key file

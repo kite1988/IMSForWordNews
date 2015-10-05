@@ -211,7 +211,8 @@ public class Application extends Controller {
 
 
             }
-
+            System.out.println(" in file : " + testFileName);
+            System.out.println("         : " + new File(testFileName).getAbsolutePath());
         }
 
         // key file.... doesn't matter
@@ -279,6 +280,7 @@ public class Application extends Controller {
 
         // there should only be one file
         for (File fileInDirectory : filesInDirectory) {
+            System.out.println(fileInDirectory.getAbsolutePath());
             if (fileInDirectory.getName().equals("aaa")) {
                 continue; // skip dummy file
             }

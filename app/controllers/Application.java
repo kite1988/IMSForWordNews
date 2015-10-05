@@ -279,6 +279,9 @@ public class Application extends Controller {
 
         // there should only be one file
         for (File fileInDirectory : filesInDirectory) {
+            if (fileInDirectory.getName().equals("aaa")) {
+                continue; // skip dummy file
+            }
             BufferedReader bufferedReader = new BufferedReader(
                                                     new FileReader(fileInDirectory));
 

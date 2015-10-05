@@ -14,6 +14,7 @@ import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombinationWithS
 import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
+import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
 import views.html.*;
 
 import org.w3c.dom.*;
@@ -263,6 +264,8 @@ public class Application extends Controller {
 
         String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
         tester.setFeatureExtractorName(featureExtractorName);
+
+        COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
         //List<File> testFiles = new ArrayList<>();
 

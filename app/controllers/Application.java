@@ -58,7 +58,7 @@ public class Application extends Controller {
     }
 
     private boolean isWordInDictionary(String word) throws SQLException {
-        String sql = "SELECT BOOLEAN FROM english_words;";
+        String sql = "SELECT id FROM english_words WHERE english_meaning = " + word;
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -69,7 +69,7 @@ public class Application extends Controller {
                 System.out.println(queryRes);
                 System.out.println(queryRes);
                 System.out.println(queryRes);
-                if (queryRes.getBoolean(1)) {
+                if (queryRes.next()) {
                     return true;
                 }
 
@@ -87,7 +87,7 @@ public class Application extends Controller {
 
         // extract request params
         final Map<String, String[]> values = request().body().asFormUrlEncoded();
-        String textContent = values.get("textContent")[0];
+        String textContent = values.get("text")[0];
         String name = values.get("name")[0];
         String url = values.get("url")[0];
         String num_words = values.get("num_words")[0];
@@ -168,9 +168,9 @@ public class Application extends Controller {
         }
 
 
-        // key file
+        // key file.... doesn't matter?
 
-
+        // run tester
 
         CTester tester = new CTester();
         String type = "file";

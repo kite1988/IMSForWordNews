@@ -37,6 +37,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +82,15 @@ public class Application extends Controller {
 
         return false;
     }
+
+    public Result showTrainedDir() {
+        File dir = new File("trainedDir");
+        File[] a = dir.listFiles();
+        List<File> heh = Arrays.asList(a);
+
+        return ok(index.render(heh.toString()));
+    }
+
 
     public Result obtainTranslation() throws Exception {
 

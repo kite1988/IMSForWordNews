@@ -169,12 +169,11 @@ public class Application extends Controller {
         }
 
         // try reading
-        String testFileName = testTempFileName+ "_test.xml" ;
+        String testFileName = testTempFileName + "_test.xml" ;
         try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
             try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
                 String lineInFile;
                 while ((lineInFile = tempFileReader.readLine()) != null) {
-                    System.out.println(lineInFile);
 
                     if (lineInFile.contains(testFlag)) {
                         StringBuilder updatedLine = new StringBuilder();
@@ -197,6 +196,20 @@ public class Application extends Controller {
 
                 }
             }
+        }
+
+
+        try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
+
+            String lineInFile;
+            while ((lineInFile = tempFileReader.readLine()) != null) {
+
+
+                System.out.println(lineInFile);
+
+
+            }
+
         }
 
         // key file.... doesn't matter
@@ -251,8 +264,7 @@ public class Application extends Controller {
         String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
         tester.setFeatureExtractorName(featureExtractorName);
 
-        List<File> testFiles = new ArrayList<>();
-        testFiles.add(new File(testFileName));
+        //List<File> testFiles = new ArrayList<>();
 
         tester.test(new File(testFileName).getAbsolutePath());
 

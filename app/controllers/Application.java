@@ -87,6 +87,7 @@ public class Application extends Controller {
         File dir = new File("trainedDir");
         File[] a = dir.listFiles();
         List<File> heh = Arrays.asList(a);
+        System.out.println(heh.get(0).getAbsolutePath());
 
         return ok(index.render(heh.toString()));
     }

@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 
 public class Application extends Controller {
@@ -83,11 +84,22 @@ public class Application extends Controller {
         return false;
     }
 
-    public Result showTrainedDir() {
+    public Result showTrainedDir() throws IOException {
         File dir = new File("trainedDir");
         File[] a = dir.listFiles();
         List<File> heh = Arrays.asList(a);
         System.out.println(heh.get(0).getAbsolutePath());
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new GZIPInputStream(new FileInputStream(heh.get(0).getAbsolutePath())), "ISO8859-1"));
+
+        String line ;
+        int count = 0;
+        while ((line = reader.readLine()) != null) {
+            count ++;
+        }
+        System.out.println("  :: " + count);
+
+        reader.close();
 
         return ok(index.render(heh.toString()));
     }

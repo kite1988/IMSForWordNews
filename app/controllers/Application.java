@@ -285,6 +285,10 @@ public class Application extends Controller {
             String lineFromResultFile;
             int fileLen = 0;
             while ((lineFromResultFile = bufferedReader.readLine()) != null) {
+                System.out.println(lineFromResultFile);
+                System.out.println("=====================================");
+
+
                 fileLen ++;
                 String[] tokensInResultsLine = lineFromResultFile.split(" ");
                 long senseId = Long.parseLong(tokensInResultsLine[1]);

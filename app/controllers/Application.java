@@ -81,7 +81,7 @@ public class Application extends Controller {
         return false;
     }
 
-    public Result obtainTranslation() throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, JWNLException, ParserConfigurationException, SQLException, TransformerException {
+    public Result obtainTranslation() throws Exception {
 
         // extract request params
         final Map<String, String[]> values = request().body().asFormUrlEncoded();
@@ -124,7 +124,7 @@ public class Application extends Controller {
 
         String testFlag =  "_____";
 
-        for (String token : tokensInText) {
+        for (String token : wordsThatCanBeTranslated) {
             Element lexelt = doc.createElement("lexelt");
             rootElement.appendChild(lexelt);
             // lexelt.setAttribute("item", );
@@ -147,7 +147,7 @@ public class Application extends Controller {
             context.setTextContent(amendedTextContent);
         }
 
-        String testFileName = "temptestfile";
+        String testTempFileName = "temptestfile";
         // write to xml
         try {
             Transformer tr = TransformerFactory.newInstance().newTransformer();
@@ -158,7 +158,7 @@ public class Application extends Controller {
             // send DOM to file
 
             tr.transform(new DOMSource(doc),
-                         new StreamResult(new FileOutputStream(testFileName)));
+                         new StreamResult(new FileOutputStream(testTempFileName)));
 
         } catch (TransformerException te) {
             System.out.println(te.getMessage());
@@ -169,9 +169,9 @@ public class Application extends Controller {
         }
 
         // try reading
-
-        try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
-            try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName + "_test.xml"))) {
+        String testFileName = testTempFileName+ "_test.xml" ;
+        try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
+            try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
                 String lineInFile;
                 while ((lineInFile = tempFileReader.readLine()) != null) {
                     System.out.println(lineInFile);
@@ -199,7 +199,8 @@ public class Application extends Controller {
             }
         }
 
-        // key file.... doesn't matter?
+        // key file.... doesn't matter
+
 
         // run tester
 
@@ -250,11 +251,36 @@ public class Application extends Controller {
         String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
         tester.setFeatureExtractorName(featureExtractorName);
 
+        List<File> testFiles = new ArrayList<>();
+        testFiles.add(new File(testFileName));
+
+        tester.test(new File(testFileName).getAbsolutePath());
 
 
+        // read from results dir
+        File resultsDirectory = new File(saveDir);
+        File[] filesInDirectory = resultsDirectory.listFiles();
 
+        // there should only be one file
+        for (File fileInDirectory : filesInDirectory) {
+            BufferedReader bufferedReader = new BufferedReader(
+                                                    new FileReader(fileInDirectory));
+
+            String lineFromResultFile;
+            int fileLen = 0;
+            while ((lineFromResultFile = bufferedReader.readLine()) != null) {
+                fileLen ++;
+                String[] tokensInResultsLine = lineFromResultFile.split(" ");
+                long senseId = Long.parseLong(tokensInResultsLine[2]);
+
+                result.put("senseid", senseId);
+            }
+
+            System.out.println("len: " + fileLen);
+
+            fileInDirectory.delete();
+        }
 
         return ok(result);
-
     }
 }

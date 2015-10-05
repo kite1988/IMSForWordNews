@@ -58,7 +58,7 @@ public class Application extends Controller {
     }
 
     private boolean isWordInDictionary(String word) throws SQLException {
-        String sql = "SELECT id FROM english_words WHERE english_meaning = " + word;
+        String sql = "SELECT id FROM english_words WHERE english_meaning = '" + word + "'";
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -138,26 +138,27 @@ public class Application extends Controller {
             instance.setAttribute("docsrc", "dummy");
 
             Element answer = doc.createElement("answer");
+            instance.appendChild(answer);
             answer.setAttribute("instance", instanceId);
             answer.setAttribute("senseid", "dunno"); // because we are trying to find that out!!!
 
             Element context = doc.createElement("context");
+            instance.appendChild(context);
             context.setTextContent(textContent);
         }
 
+        String testFileName = "temptestfile";
         // write to xml
         try {
             Transformer tr = TransformerFactory.newInstance().newTransformer();
             tr.setOutputProperty(OutputKeys.INDENT, "yes");
             tr.setOutputProperty(OutputKeys.METHOD, "xml");
             tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "roles.dtd");
-            tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
             // send DOM to file
 
             tr.transform(new DOMSource(doc),
-                         new StreamResult(new FileOutputStream("temptestfile")));
+                         new StreamResult(new FileOutputStream(testFileName)));
 
         } catch (TransformerException te) {
             System.out.println(te.getMessage());

@@ -66,9 +66,7 @@ public class Application extends Controller {
             try {
                 stmt.executeQuery(sql);
                 ResultSet queryRes = stmt.getResultSet();
-                System.out.println(queryRes);
-                System.out.println(queryRes);
-                System.out.println(queryRes);
+
                 if (queryRes.next()) {
                     return true;
                 }
@@ -113,7 +111,6 @@ public class Application extends Controller {
 
         result.put("heheheh", wordsThatCanBeTranslated.toString());
 
-
         // write to files expected by ims
         // xml file
 
@@ -124,6 +121,8 @@ public class Application extends Controller {
         Element rootElement = doc.createElement("corpus");
         doc.appendChild(rootElement);
         rootElement.setAttribute("lang", "english");
+
+        String testFlag =  "_____";
 
         for (String token : tokensInText) {
             Element lexelt = doc.createElement("lexelt");
@@ -144,7 +143,8 @@ public class Application extends Controller {
 
             Element context = doc.createElement("context");
             instance.appendChild(context);
-            context.setTextContent(textContent);
+            String amendedTextContent = textContent.replaceFirst(token, testFlag + token);
+            context.setTextContent(amendedTextContent);
         }
 
         String testFileName = "temptestfile";
@@ -168,6 +168,36 @@ public class Application extends Controller {
             throw ioe;
         }
 
+        // try reading
+
+        try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
+            try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName + "_test.xml"))) {
+                String lineInFile;
+                while ((lineInFile = tempFileReader.readLine()) != null) {
+                    System.out.println(lineInFile);
+
+                    if (lineInFile.contains(testFlag)) {
+                        StringBuilder updatedLine = new StringBuilder();
+
+                        String[] lineInFileAsTokens = lineInFile.split(" ");
+                        for (String tokenInFile : lineInFileAsTokens) {
+                            if (tokenInFile.contains(testFlag)) {
+                                String targetToken = tokenInFile.split(testFlag)[1];
+                                updatedLine.append("<head>" + targetToken + "</head>");
+                            } else {
+                                updatedLine.append(tokenInFile);
+                            }
+                            updatedLine.append(' ');
+                        }
+
+                        testFileWriter.write(updatedLine.toString());
+                    } else {
+                        testFileWriter.write(lineInFile);
+                    }
+
+                }
+            }
+        }
 
         // key file.... doesn't matter?
 

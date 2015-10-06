@@ -66,24 +66,29 @@ public class Application extends Controller {
     }
 
     private boolean isWordInDictionary(String word) throws SQLException {
-        String sql = "SELECT id FROM english_words WHERE english_meaning = '" + word + "'";
-
-        Connection conn = play.db.DB.getConnection();
         try {
-            Statement stmt = conn.createStatement();
+            String sql = "SELECT id FROM english_words WHERE english_meaning = '" + word + "'";
+
+            Connection conn = play.db.DB.getConnection();
             try {
-                stmt.executeQuery(sql);
-                ResultSet queryRes = stmt.getResultSet();
+                Statement stmt = conn.createStatement();
+                try {
+                    stmt.executeQuery(sql);
+                    ResultSet queryRes = stmt.getResultSet();
 
-                if (queryRes.next()) {
-                    return true;
+                    if (queryRes.next()) {
+                        return true;
+                    }
+
+                } finally {
+                    stmt.close();
                 }
-
             } finally {
-                stmt.close();
+                conn.close();
             }
-        } finally {
-            conn.close();
+        } catch (Exception e) {
+            //pass
+            // just return false
         }
 
         return false;

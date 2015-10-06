@@ -139,7 +139,7 @@ public class Application extends Controller {
     }
 
 
-    public Result obtainTranslation() throws Exception {
+    public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
 
         // extract request params
         final Map<String, String[]> values = request().body().asFormUrlEncoded();
@@ -173,7 +173,13 @@ public class Application extends Controller {
         // xml file
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+        DocumentBuilder docBuilder = null;
+        try {
+            docBuilder = docFactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+            throw e;
+        }
         // root elements
         Document doc = docBuilder.newDocument();
         Element rootElement = doc.createElement("corpus");
@@ -306,82 +312,89 @@ public class Application extends Controller {
 
 
 
+        try {
+            IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName)
+                    .newInstance();
 
-        IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName)
-                .newInstance();
-
-        evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
-
-
-        // set result writer
-        writerName = CResultWriter.class.getName();
-
-        IResultWriter writer = (IResultWriter) Class.forName(writerName)
-                .newInstance();
-        writer.setOptions(new String[]{"-s", saveDir});
-
-        tester.setEvaluator(evaluator);
-        tester.setWriter(writer);
-
-        String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
-        tester.setFeatureExtractorName(featureExtractorName);
-
-        COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
-
-        //List<File> testFiles = new ArrayList<>();
-        System.out.println("going to execute tester!");
-        tester.test(testFileName);
-        tester.write();
-        tester.clear();
+            evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
 
 
-        // read from results dir
-        File resultsDirectory = new File(saveDir);
-        File[] filesInDirectory = resultsDirectory.listFiles();
+            // set result writer
+            writerName = CResultWriter.class.getName();
 
-        // there should only be one file
-        for (File fileInDirectory : filesInDirectory) {
-            System.out.println(fileInDirectory.getAbsolutePath());
-            if (fileInDirectory.getName().equals("aaa")) {
-                continue; // skip dummy file
-            }
-            BufferedReader bufferedReader = new BufferedReader(
-                                                    new FileReader(fileInDirectory));
+            IResultWriter writer = (IResultWriter) Class.forName(writerName)
+                    .newInstance();
+            writer.setOptions(new String[]{"-s", saveDir});
 
-            String lineFromResultFile;
-            int fileLen = 0;
-            while ((lineFromResultFile = bufferedReader.readLine()) != null) {
-                System.out.println(lineFromResultFile);
-                System.out.println("=====================================");
+            tester.setEvaluator(evaluator);
+            tester.setWriter(writer);
+
+            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
+            tester.setFeatureExtractorName(featureExtractorName);
+
+            COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
+
+            //List<File> testFiles = new ArrayList<>();
+            System.out.println("going to execute tester!");
+            tester.test(testFileName);
+            tester.write();
+            tester.clear();
 
 
-                fileLen ++;
-                String[] tokensInResultsLine = lineFromResultFile.split(" ");
-                long senseId = -1;
-                try {
-                    senseId = Long.parseLong(tokensInResultsLine[2]);
-                    result.put("senseid", senseId);
+            // read from results dir
+            File resultsDirectory = new File(saveDir);
+            File[] filesInDirectory = resultsDirectory.listFiles();
 
-                    String chineseMeaning = getChineseFromId(senseId);
-
-                    ObjectNode tokenNode = Json.newObject();
-                    tokenNode.put("wordId", senseId);
-                    tokenNode.put("chinese", chineseMeaning);
-                    tokenNode.put("pronunciation", chineseMeaning);
-
-                    result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
-                } catch (NumberFormatException e) {
-                    // silenced because it is U
-                    assert tokensInResultsLine[2].equals("U");
+            // there should only be one file
+            for (File fileInDirectory : filesInDirectory) {
+                System.out.println(fileInDirectory.getAbsolutePath());
+                if (fileInDirectory.getName().equals("aaa")) {
+                    continue; // skip dummy file
                 }
+                BufferedReader bufferedReader = new BufferedReader(
+                        new FileReader(fileInDirectory));
+
+                String lineFromResultFile;
+                int fileLen = 0;
+                while ((lineFromResultFile = bufferedReader.readLine()) != null) {
+                    System.out.println(lineFromResultFile);
+                    System.out.println("=====================================");
+
+
+                    fileLen++;
+                    String[] tokensInResultsLine = lineFromResultFile.split(" ");
+                    long senseId = -1;
+                    try {
+                        senseId = Long.parseLong(tokensInResultsLine[2]);
+                        result.put("senseid", senseId);
+
+                        String chineseMeaning = getChineseFromId(senseId);
+
+                        ObjectNode tokenNode = Json.newObject();
+                        tokenNode.put("wordId", senseId);
+                        tokenNode.put("chinese", chineseMeaning);
+                        tokenNode.put("pronunciation", chineseMeaning);
+
+                        result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
+                    } catch (NumberFormatException e) {
+                        // silenced because it is U
+                        assert tokensInResultsLine[2].equals("U");
+                    }
+                }
+
+                System.out.println("len: " + fileLen);
+
+                fileInDirectory.delete();
             }
+        } catch (Exception e) {
+            System.out.println("Ctester problem!");
+            throw new RuntimeException(e);
 
-            System.out.println("len: " + fileLen);
-
-            fileInDirectory.delete();
         }
         System.out.println("bef return");
 
         return ok(result);
     }
+
+
 }

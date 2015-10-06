@@ -84,6 +84,32 @@ public class Application extends Controller {
         return false;
     }
 
+    private String getChineseFromId(Long chineseId) throws SQLException {
+        String sql = "SELECT id FROM chinese_words WHERE id = " + chineseId ;
+
+        Connection conn = play.db.DB.getConnection();
+        try {
+            Statement stmt = conn.createStatement();
+            try {
+                stmt.executeQuery(sql);
+                ResultSet queryRes = stmt.getResultSet();
+
+                if (queryRes.next()) {
+                    String result = queryRes.getString("id");
+                    return result;
+                }
+
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            conn.close();
+        }
+
+        return "";
+    }
+
+
     public Result showTrainedDir() throws IOException {
         File dir = new File("trainedDir");
         File[] a = dir.listFiles();
@@ -325,11 +351,14 @@ public class Application extends Controller {
                 try {
                     senseId = Long.parseLong(tokensInResultsLine[2]);
                     result.put("senseid", senseId);
+
+                    String chineseMeaning = getChineseFromId(senseId);
+                    ObjectNode tokenNode = Json.newObject();
+                    result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
                 } catch (NumberFormatException e) {
                     // silenced because it is U
                     assert tokensInResultsLine[2].equals("U");
                 }
-
             }
 
             System.out.println("len: " + fileLen);

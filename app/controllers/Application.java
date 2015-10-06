@@ -11,6 +11,7 @@ import play.api.db.*;
 import play.mvc.Result;
 import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
 import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombinationWithSenna;
+import sg.edu.nus.comp.nlp.ims.feature.SennaWordEmbeddings;
 import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
@@ -40,11 +41,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.zip.GZIPInputStream;
 
 
 public class Application extends Controller {
 
+
+    static SennaWordEmbeddings embeddings = SennaWordEmbeddings.instance();
 
     public Result index() {
         CTester tester = new CTester();
@@ -201,7 +205,8 @@ public class Application extends Controller {
             context.setTextContent(" " + amendedTextContent + " ");
         }
 
-        String testTempFileName = "temptestfile";
+        int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+        String testTempFileName = "temptestfile" + randomNumber;
         // write to xml
         try {
             Transformer tr = TransformerFactory.newInstance().newTransformer();
@@ -222,6 +227,7 @@ public class Application extends Controller {
             throw ioe;
         }
 
+        // todo use filelock
         // try reading
         String testFileName = testTempFileName + "_test.xml" ;
         try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {

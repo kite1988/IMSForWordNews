@@ -356,7 +356,12 @@ public class Application extends Controller {
                     result.put("senseid", senseId);
 
                     String chineseMeaning = getChineseFromId(senseId);
+
                     ObjectNode tokenNode = Json.newObject();
+                    tokenNode.put("wordId", senseId);
+                    tokenNode.put("chinese", chineseMeaning);
+                    tokenNode.put("pronunciation", chineseMeaning);
+
                     result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
                 } catch (NumberFormatException e) {
                     // silenced because it is U

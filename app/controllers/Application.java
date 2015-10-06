@@ -10,6 +10,7 @@ import play.api.db.*;
 
 import play.mvc.Result;
 import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
+import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombination;
 import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombinationWithSenna;
 import sg.edu.nus.comp.nlp.ims.feature.SennaWordEmbeddings;
 import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
@@ -53,7 +54,7 @@ public class Application extends Controller {
     public Result index() {
         CTester tester = new CTester();
         String type = "file";
-        File testPath = new File("generated_ims_format_text.xml");
+       // File testPath = new File("generated_ims_format_text.xml");
         String modelDir = "trainedDir";
         String statDir = "trainedDir";
         String saveDir = "resultDir";
@@ -322,7 +323,7 @@ public class Application extends Controller {
         tester.setEvaluator(evaluator);
         tester.setWriter(writer);
 
-        String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
+        String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
         tester.setFeatureExtractorName(featureExtractorName);
 
         COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");

@@ -85,7 +85,7 @@ public class Application extends Controller {
     }
 
     private String getChineseFromId(Long chineseId) throws SQLException {
-        String sql = "SELECT id FROM chinese_words WHERE id = " + chineseId ;
+        String sql = "SELECT chinese_meaning FROM chinese_words WHERE id = '" + chineseId + "'";
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -95,7 +95,10 @@ public class Application extends Controller {
                 ResultSet queryRes = stmt.getResultSet();
 
                 if (queryRes.next()) {
-                    String result = queryRes.getString("id");
+                    System.out.println("db res is ");
+                    System.out.println(queryRes.toString());
+
+                    String result = queryRes.getString("meaning");
                     return result;
                 }
 

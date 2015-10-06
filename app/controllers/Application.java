@@ -98,7 +98,7 @@ public class Application extends Controller {
                     System.out.println("db res is ");
                     System.out.println(queryRes.toString());
 
-                    String result = queryRes.getString("meaning");
+                    String result = queryRes.getString("chinese_meaning");
                     return result;
                 }
 

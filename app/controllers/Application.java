@@ -154,7 +154,7 @@ public class Application extends Controller {
         String num_words = values.get("num_words")[0];
 
         ObjectNode result = Json.newObject();
-        result.put("message", "Hello " + name);
+      //  result.put("message", "Hello " + name);
 
 
         // find words to translate
@@ -172,7 +172,7 @@ public class Application extends Controller {
         }
 
 
-        result.put("heheheh", wordsThatCanBeTranslated.toString());
+       // result.put("heheheh", wordsThatCanBeTranslated.toString());
 
         // write to files expected by ims
         // xml file
@@ -371,7 +371,7 @@ public class Application extends Controller {
                     long senseId = -1;
                     try {
                         senseId = Long.parseLong(tokensInResultsLine[2]);
-                        result.put("senseid", senseId);
+                     //   result.put("senseid", senseId);
 
                         String chineseMeaning = getChineseFromId(senseId);
 

@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index()
 POST     /show                      controllers.Application.obtainTranslation()
+GET     /show                      controllers.Application.obtainTranslation()
 GET     /showTrainedDIr             controllers.Application.showTrainedDir()
 
 # Map static resources from the /public folder to the /assets URL path

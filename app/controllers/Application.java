@@ -361,16 +361,21 @@ public class Application extends Controller {
                     String instanceId = imsResult.getID(instIdx);
                     String id = imsResult.classes[imsResult.getAnswer(instIdx)];
 
-                    long senseId = Long.parseLong(id);
-                    ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
+                    try {
+                        long senseId = Long.parseLong(id);
+                        ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
 
-                    ObjectNode tokenNode = Json.newObject();
-                    tokenNode.put("wordId", senseId);
-                    tokenNode.put("chinese", chineseResult.symbol);
-                    tokenNode.put("pronunciation", chineseResult.pronunciation);
-                    tokenNode.put("isTest", 0);
+                        ObjectNode tokenNode = Json.newObject();
+                        tokenNode.put("wordId", senseId);
+                        tokenNode.put("chinese", chineseResult.symbol);
+                        tokenNode.put("pronunciation", chineseResult.pronunciation);
+                        tokenNode.put("isTest", 0);
 
-                    result.put(instanceId.split("\\.")[0], tokenNode);
+                        result.put(instanceId.split("\\.")[0], tokenNode);
+                    } catch (NumberFormatException e) {
+                        // silenced because it is U
+                        assert id.equals("U");
+                    }
                 }
 
             }

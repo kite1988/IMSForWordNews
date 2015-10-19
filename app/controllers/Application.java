@@ -94,10 +94,10 @@ public class Application extends Controller {
         return false;
     }
 
-    private String getChineseFromId(Long chineseId) throws SQLException {
+    private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
         final int chineseIdOffset = 2; // because there of differences between the local db and db on heroku
 
-        String sql = "SELECT chinese_meaning FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
+        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -110,7 +110,10 @@ public class Application extends Controller {
                     System.out.println("db res is ");
                     System.out.println(queryRes.toString());
 
-                    String result = queryRes.getString("chinese_meaning");
+                    ChinesePronunciationPair result = new ChinesePronunciationPair();
+                    String symbol = queryRes.getString("chinese_meaning");
+                    result.symbol = symbol;
+                    result.pronunciation = queryRes.getString("pronunciation");
                     return result;
                 }
 
@@ -121,7 +124,14 @@ public class Application extends Controller {
             conn.close();
         }
 
-        return "";
+        return ChinesePronunciationPair.NONE;
+    }
+
+    private static class ChinesePronunciationPair {
+        String symbol;
+        String pronunciation;
+
+        public static ChinesePronunciationPair NONE = new ChinesePronunciationPair();
     }
 
 
@@ -375,12 +385,12 @@ public class Application extends Controller {
                         senseId = Long.parseLong(tokensInResultsLine[2]);
                      //   result.put("senseid", senseId);
 
-                        String chineseMeaning = getChineseFromId(senseId);
+                        ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
 
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);
-                        tokenNode.put("chinese", chineseMeaning);
-                        tokenNode.put("pronunciation", chineseMeaning);
+                        tokenNode.put("chinese", chineseResult.symbol);
+                        tokenNode.put("pronunciation", chineseResult.pronunciation);
                         tokenNode.put("isTest", 0);
 
                         result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);

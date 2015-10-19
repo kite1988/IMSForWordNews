@@ -14,6 +14,7 @@ import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombination;
 import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombinationWithSenna;
 import sg.edu.nus.comp.nlp.ims.feature.SennaWordEmbeddings;
 import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
+import sg.edu.nus.comp.nlp.ims.lexelt.CResultInfo;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
@@ -352,58 +353,38 @@ public class Application extends Controller {
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
             //List<File> testFiles = new ArrayList<>();
-            System.out.println("going to execute tester!");
+            //System.out.println("going to execute tester!");
             tester.test(testFileName);
             tester.write();
-            tester.clear();
+
+            List<Object> results = (List<Object>)tester.getResults();
+            for (Object thing : results) {
+                CResultInfo imsResult = (CResultInfo)thing;
+                for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
+                    String docID = imsResult.getDocID(instIdx);
+                    String id = imsResult.getID(instIdx);
+
+                    long senseId = Long.parseLong(id);
+                    ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
+
+                    ObjectNode tokenNode = Json.newObject();
+                    tokenNode.put("wordId", senseId);
+                    tokenNode.put("chinese", chineseResult.symbol);
+                    tokenNode.put("pronunciation", chineseResult.pronunciation);
+                    tokenNode.put("isTest", 0);
+
+                    result.put(docID.split("\\.")[0], tokenNode);
+                }
+
+            }
 
 
             // read from results dir
-            File resultsDirectory = new File(saveDir);
-            File[] filesInDirectory = resultsDirectory.listFiles();
-
-            // there should only be one file
-            for (File fileInDirectory : filesInDirectory) {
-                System.out.println(fileInDirectory.getAbsolutePath());
-                if (fileInDirectory.getName().equals("aaa")) {
-                    continue; // skip dummy file
-                }
-                BufferedReader bufferedReader = new BufferedReader(
-                        new FileReader(fileInDirectory));
-
-                String lineFromResultFile;
-                int fileLen = 0;
-                while ((lineFromResultFile = bufferedReader.readLine()) != null) {
-                    System.out.println(lineFromResultFile);
-                    System.out.println("=====================================");
+            //File resultsDirectory = new File(saveDir);
+            //File[] filesInDirectory = resultsDirectory.listFiles();
+            //handleResultsDir(result, filesInDirectory);
 
 
-                    fileLen++;
-                    String[] tokensInResultsLine = lineFromResultFile.split(" ");
-                    long senseId = -1;
-                    try {
-                        senseId = Long.parseLong(tokensInResultsLine[2]);
-                     //   result.put("senseid", senseId);
-
-                        ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
-
-                        ObjectNode tokenNode = Json.newObject();
-                        tokenNode.put("wordId", senseId);
-                        tokenNode.put("chinese", chineseResult.symbol);
-                        tokenNode.put("pronunciation", chineseResult.pronunciation);
-                        tokenNode.put("isTest", 0);
-
-                        result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
-                    } catch (NumberFormatException e) {
-                        // silenced because it is U
-                        assert tokensInResultsLine[2].equals("U");
-                    }
-                }
-
-                System.out.println("len: " + fileLen);
-
-                fileInDirectory.delete();
-            }
         } catch (Exception e) {
             System.out.println("Ctester problem!");
             throw new RuntimeException(e);
@@ -412,6 +393,51 @@ public class Application extends Controller {
         System.out.println("bef return");
 
         return ok(result);
+    }
+
+    private void handleResultsDir(ObjectNode result, File[] filesInDirectory) throws IOException, SQLException {
+        // there should only be one file
+        for (File fileInDirectory : filesInDirectory) {
+            System.out.println(fileInDirectory.getAbsolutePath());
+            if (fileInDirectory.getName().equals("aaa")) {
+                continue; // skip dummy file
+            }
+            BufferedReader bufferedReader = new BufferedReader(
+                    new FileReader(fileInDirectory));
+
+            String lineFromResultFile;
+            int fileLen = 0;
+            while ((lineFromResultFile = bufferedReader.readLine()) != null) {
+                System.out.println(lineFromResultFile);
+                System.out.println("=====================================");
+
+
+                fileLen++;
+                String[] tokensInResultsLine = lineFromResultFile.split(" ");
+                long senseId = -1;
+                try {
+                    senseId = Long.parseLong(tokensInResultsLine[2]);
+                 //   result.put("senseid", senseId);
+
+                    ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
+
+                    ObjectNode tokenNode = Json.newObject();
+                    tokenNode.put("wordId", senseId);
+                    tokenNode.put("chinese", chineseResult.symbol);
+                    tokenNode.put("pronunciation", chineseResult.pronunciation);
+                    tokenNode.put("isTest", 0);
+
+                    result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
+                } catch (NumberFormatException e) {
+                    // silenced because it is U
+                    assert tokensInResultsLine[2].equals("U");
+                }
+            }
+
+            System.out.println("len: " + fileLen);
+
+            fileInDirectory.delete();
+        }
     }
 
 

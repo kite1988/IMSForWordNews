@@ -362,7 +362,7 @@ public class Application extends Controller {
                 CResultInfo imsResult = (CResultInfo)thing;
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
                     String docID = imsResult.getDocID(instIdx);
-                    String id = imsResult.getID(instIdx);
+                    String id = imsResult.classes[imsResult.getAnswer(instIdx)];
 
                     long senseId = Long.parseLong(id);
                     ChinesePronunciationPair chineseResult = getChineseFromId(senseId);

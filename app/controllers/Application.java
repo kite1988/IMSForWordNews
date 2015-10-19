@@ -98,6 +98,7 @@ public class Application extends Controller {
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
         final int chineseIdOffset = 2; // because there of differences between the local db and db on heroku
 
+        System.out.println(chineseId);
         String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
         Connection conn = play.db.DB.getConnection();
@@ -108,8 +109,6 @@ public class Application extends Controller {
                 ResultSet queryRes = stmt.getResultSet();
 
                 if (queryRes.next()) {
-                    System.out.println("db res is ");
-                    System.out.println(queryRes.toString());
 
                     ChinesePronunciationPair result = new ChinesePronunciationPair();
                     String symbol = queryRes.getString("chinese_meaning");
@@ -352,10 +351,8 @@ public class Application extends Controller {
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
-            //List<File> testFiles = new ArrayList<>();
-            //System.out.println("going to execute tester!");
+
             tester.test(testFileName);
-            tester.write();
 
             List<Object> results = (List<Object>)tester.getResults();
             for (Object thing : results) {
@@ -390,7 +387,6 @@ public class Application extends Controller {
             throw new RuntimeException(e);
 
         }
-        System.out.println("bef return");
 
         return ok(result);
     }

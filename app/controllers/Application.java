@@ -158,6 +158,7 @@ public class Application extends Controller {
 
     public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
 
+        long startTime = System.currentTimeMillis();
         // extract request params
         final Map<String, String[]> values = request().body().asFormUrlEncoded();
         String textContent = values.get("text")[0];
@@ -166,8 +167,6 @@ public class Application extends Controller {
         String num_words = values.get("num_words")[0];
 
         ObjectNode result = Json.newObject();
-      //  result.put("message", "Hello " + name);
-
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
@@ -175,16 +174,13 @@ public class Application extends Controller {
         for (String token : tokensInText ) {
             try {
                 if (isWordInDictionary(token.toLowerCase())) {
-                    wordsThatCanBeTranslated.add(token.toLowerCase());
+                    wordsThatCanBeTranslated.add(token);
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
                 throw e;
             }
         }
-
-
-       // result.put("heheheh", wordsThatCanBeTranslated.toString());
 
         // write to files expected by ims
         // xml file
@@ -299,6 +295,9 @@ public class Application extends Controller {
 
         // key file.... doesn't matter
 
+        System.out.println(System.currentTimeMillis() - startTime);
+        System.out.println("before preparing tester");
+        System.out.println(System.currentTimeMillis() - startTime);
 
         // run tester
 
@@ -389,6 +388,8 @@ public class Application extends Controller {
 
         }
 
+        System.out.println("bef return");
+        System.out.println(System.currentTimeMillis() - startTime);
         return ok(result);
     }
 

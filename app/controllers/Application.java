@@ -242,7 +242,7 @@ public class Application extends Controller {
         }
 
         // todo use filelock
-        // try reading
+        // write to format expected by ims
         String testFileName = testTempFileName + "_test.xml" ;
         try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
             try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
@@ -273,7 +273,7 @@ public class Application extends Controller {
         }
 
 
-        try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
+    /*    try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
 
             String lineInFile;
             while ((lineInFile = tempFileReader.readLine()) != null) {
@@ -285,7 +285,7 @@ public class Application extends Controller {
             }
             System.out.println(" in file : " + testFileName);
             System.out.println("         : " + new File(testFileName).getAbsolutePath());
-        }
+        }*/
 
         // key file.... doesn't matter
 
@@ -381,6 +381,7 @@ public class Application extends Controller {
                         tokenNode.put("wordId", senseId);
                         tokenNode.put("chinese", chineseMeaning);
                         tokenNode.put("pronunciation", chineseMeaning);
+                        tokenNode.put("isTest", 0);
 
                         result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
                     } catch (NumberFormatException e) {

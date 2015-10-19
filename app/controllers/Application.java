@@ -359,6 +359,7 @@ public class Application extends Controller {
                 CResultInfo imsResult = (CResultInfo)thing;
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
                     String docID = imsResult.getDocID(instIdx);
+                    String instanceId = imsResult.getID(instIdx);
                     String id = imsResult.classes[imsResult.getAnswer(instIdx)];
 
                     long senseId = Long.parseLong(id);
@@ -370,7 +371,7 @@ public class Application extends Controller {
                     tokenNode.put("pronunciation", chineseResult.pronunciation);
                     tokenNode.put("isTest", 0);
 
-                    result.put(docID.split("\\.")[0], tokenNode);
+                    result.put(instanceId.split("\\.")[0], tokenNode);
                 }
 
             }

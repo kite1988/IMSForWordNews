@@ -174,8 +174,8 @@ public class Application extends Controller {
         String[] tokensInText = textContent.split(" ");
         for (String token : tokensInText ) {
             try {
-                if (isWordInDictionary(token)) {
-                    wordsThatCanBeTranslated.add(token);
+                if (isWordInDictionary(token.toLowerCase())) {
+                    wordsThatCanBeTranslated.add(token.toLowerCase());
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

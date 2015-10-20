@@ -165,6 +165,12 @@ public class Application extends Controller {
         String name = values.get("name")[0];
         String url = values.get("url")[0];
         String num_words = values.get("num_words")[0];
+        int numWords;
+        try {
+            numWords = Integer.parseInt(num_words);
+        } catch (NumberFormatException | NullPointerException e) {
+            numWords = 2;
+        }
 
         ObjectNode result = Json.newObject();
 
@@ -175,6 +181,9 @@ public class Application extends Controller {
             try {
                 if (isWordInDictionary(token.toLowerCase())) {
                     wordsThatCanBeTranslated.add(token);
+                    if (wordsThatCanBeTranslated.size() >= numWords) {
+                        break;
+                    }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

@@ -49,13 +49,29 @@ import java.util.zip.GZIPInputStream;
 
 public class Application extends Controller {
 
-
     static SennaWordEmbeddings embeddings = SennaWordEmbeddings.instance();
+    IEvaluator evaluator;
+    {
+        String modelDir = "trainedDir";
+        String statDir = "trainedDir";
+        String evaluatorName = CLibLinearEvaluator.class.getName();
+        evaluator = null;
+        try {
+            evaluator = (IEvaluator) Class.forName(evaluatorName).newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
+    }
 
     public Result index() {
         CTester tester = new CTester();
         String type = "file";
-       // File testPath = new File("generated_ims_format_text.xml");
         String modelDir = "trainedDir";
         String statDir = "trainedDir";
         String saveDir = "resultDir";
@@ -98,7 +114,6 @@ public class Application extends Controller {
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
         final int chineseIdOffset = 2; // because there of differences between the local db and db on heroku
 
-        System.out.println(chineseId);
         String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
         Connection conn = play.db.DB.getConnection();
@@ -138,21 +153,20 @@ public class Application extends Controller {
     public Result showTrainedDir() throws IOException {
         File dir = new File("trainedDir");
         File[] a = dir.listFiles();
-        List<File> heh = Arrays.asList(a);
-        System.out.println(heh.get(0).getAbsolutePath());
+        List<File> listOfFilesInDirectory = Arrays.asList(a);
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new GZIPInputStream(new FileInputStream(heh.get(0))), "ISO8859-1"));
+                new GZIPInputStream(new FileInputStream(listOfFilesInDirectory.get(0))), "ISO8859-1"));
 
         String line ;
         int count = 0;
         while ((line = reader.readLine()) != null) {
             count ++;
         }
-        System.out.println("  :: " + count);
 
         reader.close();
 
-        return ok(index.render(heh.toString()));
+        return ok(index.render(listOfFilesInDirectory.toString()));
     }
 
 
@@ -256,7 +270,7 @@ public class Application extends Controller {
             throw ioe;
         }
 
-        // todo use filelock
+        // todo use filelock / or remove the need for files altogether
         // write to format expected by ims
         String testFileName = testTempFileName + "_test.xml" ;
         try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
@@ -304,19 +318,14 @@ public class Application extends Controller {
 
         // key file.... doesn't matter
 
-        System.out.println(System.currentTimeMillis() - startTime);
-        System.out.println("before preparing tester");
-        System.out.println(System.currentTimeMillis() - startTime);
-
         // run tester
 
         CTester tester = new CTester();
         String type = "file";
         //File testPath = new File("generated_ims_format_text.xml");
-        String modelDir = "trainedDir";
-        String statDir = "trainedDir";
+
         String saveDir = "resultDir";
-        String evaluatorName = CLibLinearEvaluator.class.getName();
+
         String writerName = CResultWriter.class.getName();
         String lexeltFile = null;
 
@@ -331,34 +340,25 @@ public class Application extends Controller {
             throw e;
         }
 
-
         COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
         COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
-
-
         try {
-            IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName)
-                    .newInstance();
-
-            evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
 
 
             // set result writer
             writerName = CResultWriter.class.getName();
 
-            IResultWriter writer = (IResultWriter) Class.forName(writerName)
-                    .newInstance();
+            IResultWriter writer = (IResultWriter) Class.forName(writerName).newInstance();
             writer.setOptions(new String[]{"-s", saveDir});
 
-            tester.setEvaluator(evaluator);
+
             tester.setWriter(writer);
 
             String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
-
 
             tester.test(testFileName);
 
@@ -386,15 +386,7 @@ public class Application extends Controller {
                         assert id.equals("U");
                     }
                 }
-
             }
-
-
-            // read from results dir
-            //File resultsDirectory = new File(saveDir);
-            //File[] filesInDirectory = resultsDirectory.listFiles();
-            //handleResultsDir(result, filesInDirectory);
-
 
         } catch (Exception e) {
             System.out.println("Ctester problem!");
@@ -402,16 +394,17 @@ public class Application extends Controller {
 
         }
 
-        System.out.println("bef return");
-        System.out.println(System.currentTimeMillis() - startTime);
         return ok(result);
     }
 
     private void handleResultsDir(ObjectNode result, File[] filesInDirectory) throws IOException, SQLException {
         // there should only be one file
         for (File fileInDirectory : filesInDirectory) {
-            System.out.println(fileInDirectory.getAbsolutePath());
             if (fileInDirectory.getName().equals("aaa")) {
+                // Needed to commit this file, somehow I needed to commit a directory to heroku
+                // (it didn't have permission to create a directory on its own, it seems)
+                // (and to commit a directory, need to have a file in it)
+
                 continue; // skip dummy file
             }
             BufferedReader bufferedReader = new BufferedReader(
@@ -420,8 +413,6 @@ public class Application extends Controller {
             String lineFromResultFile;
             int fileLen = 0;
             while ((lineFromResultFile = bufferedReader.readLine()) != null) {
-                System.out.println(lineFromResultFile);
-                System.out.println("=====================================");
 
 
                 fileLen++;
@@ -445,8 +436,6 @@ public class Application extends Controller {
                     assert tokensInResultsLine[2].equals("U");
                 }
             }
-
-            System.out.println("len: " + fileLen);
 
             fileInDirectory.delete();
         }

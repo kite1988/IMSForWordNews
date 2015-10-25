@@ -25,9 +25,7 @@ import org.w3c.dom.*;
 
 import sg.edu.nus.comp.nlp.ims.implement.CTester;
 import sg.edu.nus.comp.nlp.ims.classifiers.IEvaluator;
-import sg.edu.nus.comp.nlp.ims.io.IResultWriter;
 
-import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -277,7 +275,6 @@ public class Application extends Controller {
             try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
                 String lineInFile;
                 while ((lineInFile = tempFileReader.readLine()) != null) {
-
                     if (lineInFile.contains(testFlag)) {
                         StringBuilder updatedLine = new StringBuilder();
 
@@ -296,25 +293,10 @@ public class Application extends Controller {
                     } else {
                         testFileWriter.write(lineInFile);
                     }
-
                 }
             }
         }
 
-
-    /*    try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
-
-            String lineInFile;
-            while ((lineInFile = tempFileReader.readLine()) != null) {
-
-
-                System.out.println(lineInFile);
-
-
-            }
-            System.out.println(" in file : " + testFileName);
-            System.out.println("         : " + new File(testFileName).getAbsolutePath());
-        }*/
 
         // key file.... doesn't matter
 
@@ -322,11 +304,7 @@ public class Application extends Controller {
 
         CTester tester = new CTester();
         String type = "file";
-        //File testPath = new File("generated_ims_format_text.xml");
 
-        String saveDir = "resultDir";
-
-        String writerName = CResultWriter.class.getName();
         String lexeltFile = null;
 
         // initial JWordNet
@@ -344,17 +322,6 @@ public class Application extends Controller {
         COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
         try {
-
-
-            // set result writer
-            writerName = CResultWriter.class.getName();
-
-            IResultWriter writer = (IResultWriter) Class.forName(writerName).newInstance();
-            writer.setOptions(new String[]{"-s", saveDir});
-
-
-            tester.setWriter(writer);
-
             String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
@@ -362,7 +329,7 @@ public class Application extends Controller {
 
             tester.test(testFileName);
 
-            List<Object> results = (List<Object>)tester.getResults();
+            List<Object> results = tester.getResults();
             for (Object thing : results) {
                 CResultInfo imsResult = (CResultInfo)thing;
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
@@ -373,6 +340,14 @@ public class Application extends Controller {
                     try {
                         long senseId = Long.parseLong(id);
                         ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
+
+                        if (chineseResult == ChinesePronunciationPair.NONE) {
+                            // no result found, don't include in the returned json
+
+                            // this pretty much means a bad assumption has been made
+                            System.err.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
+                            continue;
+                        }
 
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);

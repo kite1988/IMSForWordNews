@@ -328,6 +328,7 @@ public class Application extends Controller {
         COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
         try {
+            System.out.println(evaluator);
             tester.setEvaluator(evaluator);
             String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);

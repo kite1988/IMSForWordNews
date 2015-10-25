@@ -203,8 +203,6 @@ public class Application extends Controller {
             }
         }
 
-        System.out.println(wordsThatCanBeTranslated);
-
         // write to files expected by ims
         // xml file
 
@@ -312,6 +310,11 @@ public class Application extends Controller {
         // initial JWordNet
         try {
             CJWNL.initial(new FileInputStream("lib/prop.xml"));
+            try {
+                CJWNL.checkStatus();
+            } catch (Exception e) {
+                System.out.println("not init!");
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             throw e;
@@ -333,7 +336,9 @@ public class Application extends Controller {
 
             List<Object> results = tester.getResults();
             for (Object thing : results) {
+                System.out.println("RESULT!");
                 CResultInfo imsResult = (CResultInfo)thing;
+                System.out.println(imsResult.size());
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
                     String docID = imsResult.getDocID(instIdx);
                     String instanceId = imsResult.getID(instIdx);
@@ -347,6 +352,7 @@ public class Application extends Controller {
                             // no result found, don't include in the returned json
 
                             // this pretty much means a bad assumption has been made
+                            System.out.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             System.err.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             continue;
                         }

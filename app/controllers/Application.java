@@ -203,6 +203,8 @@ public class Application extends Controller {
             }
         }
 
+        System.out.println(wordsThatCanBeTranslated);
+
         // write to files expected by ims
         // xml file
 

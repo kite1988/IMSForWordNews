@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.didion.jwnl.JWNLException;
 import play.*;
+import play.api.libs.ws.ssl.SystemConfiguration;
 import play.libs.Json;
 import play.mvc.*;
 import play.api.db.*;
@@ -344,6 +345,9 @@ public class Application extends Controller {
                     String instanceId = imsResult.getID(instIdx);
                     String id = imsResult.classes[imsResult.getAnswer(instIdx)];
 
+                    System.out.println("====");
+                    System.out.println(id);
+
                     try {
                         long senseId = Long.parseLong(id);
                         ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
@@ -366,6 +370,7 @@ public class Application extends Controller {
                         result.put(instanceId.split("\\.")[0], tokenNode);
                     } catch (NumberFormatException e) {
                         // silenced because it is U
+                        System.out.println("WE MESSED UP!");
                         assert id.equals("U");
                     }
                 }

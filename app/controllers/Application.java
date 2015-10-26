@@ -19,6 +19,7 @@ import sg.edu.nus.comp.nlp.ims.lexelt.CResultInfo;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
+import util.ImsWrapper;
 import views.html.*;
 
 import org.w3c.dom.*;
@@ -49,24 +50,6 @@ import java.util.zip.GZIPInputStream;
 public class Application extends Controller {
 
     static SennaWordEmbeddings embeddings = SennaWordEmbeddings.instance();
-    IEvaluator evaluator;
-    {
-        String modelDir = "trainedDir";
-        String statDir = "trainedDir";
-        String evaluatorName = CLibLinearEvaluator.class.getName();
-        evaluator = null;
-        try {
-            evaluator = (IEvaluator) Class.forName(evaluatorName).newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
-    }
 
     public Result index() {
         CTester tester = new CTester();
@@ -204,6 +187,9 @@ public class Application extends Controller {
             }
         }
 
+        System.out.println("after obtaining words to trans");
+        System.out.println(System.currentTimeMillis() - startTime);
+
         // write to files expected by ims
         // xml file
 
@@ -298,6 +284,8 @@ public class Application extends Controller {
             }
         }
 
+        System.out.println("after writing to test files");
+        System.out.println(System.currentTimeMillis() - startTime);
 
         // key file.... doesn't matter
 
@@ -327,8 +315,11 @@ public class Application extends Controller {
         COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
         COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
+        System.out.println("after initialise models and pos dictionary for tester");
+        System.out.println(System.currentTimeMillis() - startTime);
+
         try {
-            tester.setEvaluator(evaluator);
+            tester.setEvaluator(ImsWrapper.getEvaluator());
             String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
@@ -382,6 +373,9 @@ public class Application extends Controller {
             throw new RuntimeException(e);
 
         }
+
+        System.out.println("just before return");
+        System.out.println(System.currentTimeMillis() - startTime);
 
         return ok(result);
     }

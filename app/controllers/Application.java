@@ -326,10 +326,18 @@ public class Application extends Controller {
 
         try {
             tester.setEvaluator(ImsWrapper.getEvaluator());
+            System.out.println("evaluator set!");
+            System.out.println(ImsWrapper.getEvaluator());
+
             String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
+            System.out.println("feature extractor set");
+            System.out.println(featureExtractorName);
+
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
+
+            System.out.println("right before testing!");
 
             tester.test(testFileName);
 

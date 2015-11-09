@@ -14,6 +14,7 @@ public class ImsWrapper {
         if (evaluator == null) {
             String evaluatorName = CLibLinearEvaluator.class.getName();
             evaluator = (IEvaluator) Class.forName(evaluatorName).newInstance();
+            evaluator.setOptions(new String[]{"-m", "trainedDir", "-s", "trainedDir"});
         }
         return evaluator;
     }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.didion.jwnl.JWNLException;
 import play.*;
 import play.api.libs.ws.ssl.SystemConfiguration;
+import play.core.j.HttpExecutionContext;
 import play.libs.Json;
 import play.mvc.*;
 import play.api.db.*;
@@ -151,6 +152,11 @@ public class Application extends Controller {
         return ok(index.render(listOfFilesInDirectory.toString()));
     }
 
+    public void logMessage(String message) {
+        ;
+
+
+    }
 
     public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
 
@@ -284,7 +290,7 @@ public class Application extends Controller {
             }
         }
 
-        System.out.println("after writing to test files");
+        System.out.println("after writing to test file: " + testTempFileName);
         System.out.println(System.currentTimeMillis() - startTime);
 
         // key file.... doesn't matter
@@ -348,6 +354,7 @@ public class Application extends Controller {
                             // no result found, don't include in the returned json
 
                             // this pretty much means a bad assumption has been made
+                            // but let's not assert for now, just log and fail
                             System.out.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             System.err.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             continue;

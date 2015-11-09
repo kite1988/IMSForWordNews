@@ -329,7 +329,7 @@ public class Application extends Controller {
             System.out.println("evaluator set!");
             System.out.println(ImsWrapper.getEvaluator());
 
-            String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
+            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
             System.out.println("feature extractor set");

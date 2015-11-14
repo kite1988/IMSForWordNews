@@ -50,17 +50,8 @@ import java.util.zip.GZIPInputStream;
 
 public class Application extends Controller {
 
-    static SennaWordEmbeddings embeddings = SennaWordEmbeddings.instance();
 
     public Result index() {
-        CTester tester = new CTester();
-        String type = "file";
-        String modelDir = "trainedDir";
-        String statDir = "trainedDir";
-        String saveDir = "resultDir";
-        String evaluatorName = sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator.class.getName();
-        String writerName = sg.edu.nus.comp.nlp.ims.io.CResultWriter.class.getName();
-        String lexeltFile = null;
 
         return ok(index.render("Your new application is ready.!!"));
     }
@@ -308,7 +299,7 @@ public class Application extends Controller {
             try {
                 CJWNL.checkStatus();
             } catch (Exception e) {
-                System.out.println("not init!");
+                System.out.println("CJWNL is not initialised!");
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -325,9 +316,13 @@ public class Application extends Controller {
         System.out.println(System.currentTimeMillis() - startTime);
 
         try {
-            tester.setEvaluator(ImsWrapper.getEvaluator());
+            String evaluatorName = CLibLinearEvaluator.class.getName();
+            IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName).newInstance();
+            evaluator.setOptions(new String[]{"-m", "trainedDir", "-s", "trainedDir"});
+            
+            tester.setEvaluator(evaluator);
             System.out.println("evaluator set!");
-            System.out.println(ImsWrapper.getEvaluator());
+            System.out.println(evaluator);
 
             String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);

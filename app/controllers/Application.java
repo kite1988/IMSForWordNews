@@ -146,6 +146,9 @@ public class Application extends Controller {
     public Result showTempTestFiles() throws IOException {
         File dir = new File(".");
         File[] a = dir.listFiles();
+        for (File f : a) {
+            System.out.println(f.getName());
+        }
         List<File> listOfFilesInDirectory = Arrays.asList(a);
 
         return ok(index.render(listOfFilesInDirectory.toString()));

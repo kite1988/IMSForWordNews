@@ -151,6 +151,8 @@ public class Application extends Controller {
 
     public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
 
+        int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+
         long startTime = System.currentTimeMillis();
         // extract request params
         final Map<String, String[]> values = request().body().asFormUrlEncoded();
@@ -184,7 +186,7 @@ public class Application extends Controller {
             }
         }
 
-        System.out.println("after obtaining words to trans");
+        System.out.println(randomNumber + " : after obtaining words to trans ");
         System.out.println(System.currentTimeMillis() - startTime);
 
         // write to files expected by ims
@@ -230,7 +232,7 @@ public class Application extends Controller {
             context.setTextContent(" " + amendedTextContent + " ");
         }
 
-        int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+
         String testTempFileName = "temptestfile" + randomNumber;
         // write to xml
         try {
@@ -281,7 +283,7 @@ public class Application extends Controller {
             }
         }
 
-        System.out.println("after writing to test file: " + testTempFileName);
+        System.out.println(randomNumber + " : after writing to test file: " + testTempFileName);
         System.out.println(System.currentTimeMillis() - startTime);
 
         // key file.... doesn't matter
@@ -293,13 +295,16 @@ public class Application extends Controller {
 
         String lexeltFile = null;
 
+
+        System.out.println(randomNumber + " : before initialise models and pos dictionary for tester");
+
         // initial JWordNet
         try {
             CJWNL.initial(new FileInputStream("lib/prop.xml"));
             try {
                 CJWNL.checkStatus();
             } catch (Exception e) {
-                System.out.println("CJWNL is not initialised!");
+                System.out.println(randomNumber + " : CJWNL is not initialised!");
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -312,7 +317,7 @@ public class Application extends Controller {
         COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
         COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
-        System.out.println("after initialise models and pos dictionary for tester");
+        System.out.println(randomNumber + " : after initialise models and pos dictionary for tester");
         System.out.println(System.currentTimeMillis() - startTime);
 
         try {
@@ -321,24 +326,24 @@ public class Application extends Controller {
             evaluator.setOptions(new String[]{"-m", "trainedDir", "-s", "trainedDir"});
             
             tester.setEvaluator(evaluator);
-            System.out.println("evaluator set!");
+            System.out.println(randomNumber + " : evaluator set!");
             System.out.println(evaluator);
 
             String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
-            System.out.println("feature extractor set");
+            System.out.println(randomNumber + " : feature extractor set");
             System.out.println(featureExtractorName);
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
-            System.out.println("right before testing!");
+            System.out.println(randomNumber + " : right before testing!");
 
             tester.test(testFileName);
 
             List<Object> results = tester.getResults();
             for (Object thing : results) {
-                System.out.println("RESULT!");
+                System.out.println(randomNumber + " : RESULT!");
                 CResultInfo imsResult = (CResultInfo)thing;
                 System.out.println(imsResult.size());
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
@@ -358,7 +363,7 @@ public class Application extends Controller {
 
                             // this pretty much means a bad assumption has been made
                             // but let's not assert for now, just log and fail
-                            System.out.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
+                            System.out.println(randomNumber  + "  : UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             System.err.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             continue;
                         }
@@ -372,19 +377,19 @@ public class Application extends Controller {
                         result.put(instanceId.split("\\.")[0], tokenNode);
                     } catch (NumberFormatException e) {
                         // silenced because it is U
-                        System.out.println("WE MESSED UP!");
+                        System.out.println(randomNumber + " : WE MESSED UP!");
                         assert id.equals("U");
                     }
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("Ctester problem!");
+            System.out.println(randomNumber + "  : Ctester problem!");
             throw new RuntimeException(e);
 
         }
 
-        System.out.println("just before return");
+        System.out.println(randomNumber  + " : just before return");
         System.out.println(System.currentTimeMillis() - startTime);
 
         return ok(result);

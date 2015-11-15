@@ -143,6 +143,14 @@ public class Application extends Controller {
         return ok(index.render(listOfFilesInDirectory.toString()));
     }
 
+    public Result showTempTestFiles() throws IOException {
+        File dir = new File(".");
+        File[] a = dir.listFiles();
+        List<File> listOfFilesInDirectory = Arrays.asList(a);
+
+        return ok(index.render(listOfFilesInDirectory.toString()));
+    }
+
     public void logMessage(String message) {
         ;
 
@@ -168,6 +176,8 @@ public class Application extends Controller {
         }
 
         ObjectNode result = Json.newObject();
+        System.out.println(randomNumber + " : starting! ");
+
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
@@ -298,21 +308,14 @@ public class Application extends Controller {
 
         System.out.println(randomNumber + " : before initialise models and pos dictionary for tester");
 
-        // initial JWordNet
+        // checks JWordNet
+
         try {
-            CJWNL.initial(new FileInputStream("lib/prop.xml"));
-            try {
-                CJWNL.checkStatus();
-            } catch (Exception e) {
-                System.out.println(randomNumber + " : CJWNL is not initialised!");
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            throw e;
-        } catch (JWNLException e) {
-            e.printStackTrace();
-            throw e;
+            CJWNL.checkStatus();
+        } catch (Exception e) {
+            System.out.println(randomNumber + " : CJWNL is not initialised!");
         }
+
 
         COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
         COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");

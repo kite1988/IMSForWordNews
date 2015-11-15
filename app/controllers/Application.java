@@ -247,6 +247,8 @@ public class Application extends Controller {
 
 
         String testTempFileName = "temptestfile" + randomNumber;
+
+        String xmlString = null;
         // write to xml
         try {
             Transformer tr = TransformerFactory.newInstance().newTransformer();
@@ -255,21 +257,21 @@ public class Application extends Controller {
             tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
 
             // send DOM to file
-
+            StringWriter writer = new StringWriter();
             tr.transform(new DOMSource(doc),
-                         new StreamResult(new FileOutputStream(testTempFileName)));
+                         new StreamResult(writer));
 
+            writer.flush();
+
+            xmlString = writer.toString();
         } catch (TransformerException te) {
             System.out.println(te.getMessage());
             throw te;
-        } catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
-            throw ioe;
         }
 
         // todo use filelock / or remove the need for files altogether
         // write to format expected by ims
-        String testFileName = testTempFileName + "_test.xml" ;
+        /*String testFileName = testTempFileName + "_test.xml" ;
         try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
             try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
                 String lineInFile;
@@ -294,7 +296,25 @@ public class Application extends Controller {
                     }
                 }
             }
+        }*/
+        StringBuilder finalXmlString = new StringBuilder();
+        for (String line : xmlString.split(System.getProperty("line.separator"))) {
+            String[] lineInFileAsTokens = line.split(" ");
+            StringBuilder updatedLine = new StringBuilder();
+            for (String tokenInFile : lineInFileAsTokens) {
+                if (tokenInFile.contains(testFlag)) {
+                    String targetToken = tokenInFile.split(testFlag)[1];
+                    updatedLine.append("<head>" + targetToken + "</head>");
+                } else {
+                    updatedLine.append(tokenInFile);
+                }
+                updatedLine.append(' ');
+            }
+
+            finalXmlString.append(updatedLine.toString());
         }
+
+        System.out.println(finalXmlString);
 
         System.out.println(randomNumber + " : after writing to test file: " + testTempFileName);
         System.out.println(System.currentTimeMillis() - startTime);
@@ -345,7 +365,7 @@ public class Application extends Controller {
 
             System.out.println(randomNumber + " : right before testing!");
 
-            tester.test(testFileName);
+            tester.test(finalXmlString.toString());
 
             List<Object> results = tester.getResults();
             for (Object thing : results) {

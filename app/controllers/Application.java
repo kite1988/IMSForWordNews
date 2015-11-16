@@ -112,8 +112,8 @@ public class Application extends Controller {
 
         return ChinesePronunciationPair.NONE;
     }*/
-    private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
-        final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
+    private ChinesePronunciationPair getChineseFromId(Long chineseId) throws Exception {
+        final int chineseIdOffset = 0; // set to non-zero if there are differences between the local db and db on heroku
 
         String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
@@ -125,13 +125,15 @@ public class Application extends Controller {
             conn = DriverManager.getConnection("jdbc:sqlite:database.db");
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-            System.out.println(e.getClass().getName() + ": " + e.getMessage());
+            System.out.println("getChineseFromId : " + e.getClass().getName() + ": " + e.getMessage());
+
+            throw e;
 
         }
 
 
         assert conn != null;
-        System.out.println("got connection");
+        System.out.println("conn" + conn);
         try {
             Statement stmt = conn.createStatement();
             try {
@@ -500,6 +502,9 @@ public class Application extends Controller {
                 } catch (NumberFormatException e) {
                     // silenced because it is U
                     assert tokensInResultsLine[2].equals("U");
+                } catch (Exception e) {
+                    System.out.println("exception");
+                    e.printStackTrace();
                 }
             }
 

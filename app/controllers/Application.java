@@ -36,10 +36,7 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,7 +81,7 @@ public class Application extends Controller {
 
         return false;
     }
-
+/*
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
         final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
 
@@ -114,7 +111,48 @@ public class Application extends Controller {
         }
 
         return ChinesePronunciationPair.NONE;
+    }*/
+    private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
+        final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
+
+        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
+
+
+        Connection conn = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            conn = DriverManager.getConnection("jdbc:sqlite:database.db");
+        } catch ( Exception e ) {
+            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            System.exit(0);
+        }
+
+        assert conn != null;
+        try {
+            Statement stmt = conn.createStatement();
+            try {
+                stmt.executeQuery(sql);
+                ResultSet queryRes = stmt.getResultSet();
+
+                if (queryRes.next()) {
+
+                    ChinesePronunciationPair result = new ChinesePronunciationPair();
+                    String symbol = queryRes.getString("chinese_meaning");
+                    result.symbol = symbol;
+                    result.pronunciation = queryRes.getString("pronunciation");
+                    return result;
+                }
+
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            conn.close();
+        }
+
+        return ChinesePronunciationPair.NONE;
     }
+
 
     private static class ChinesePronunciationPair {
         String symbol;

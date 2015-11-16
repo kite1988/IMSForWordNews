@@ -120,14 +120,18 @@ public class Application extends Controller {
 
         Connection conn = null;
         try {
+            System.out.println("opening connection");
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:database.db");
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-            System.exit(0);
+            System.out.println(e.getClass().getName() + ": " + e.getMessage());
+
         }
 
+
         assert conn != null;
+        System.out.println("got connection");
         try {
             Statement stmt = conn.createStatement();
             try {

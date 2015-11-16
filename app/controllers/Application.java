@@ -403,7 +403,7 @@ public class Application extends Controller {
 
             System.out.println(randomNumber + " : right before testing!");
 
-            tester.test(finalXmlString.toString(), null);
+            tester.testWithXmlString(finalXmlString.toString(), null);
 
             List<Object> results = tester.getResults();
             for (Object thing : results) {

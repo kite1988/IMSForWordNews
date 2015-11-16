@@ -86,7 +86,7 @@ public class Application extends Controller {
     }
 
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
-        final int chineseIdOffset = 2; // because there of differences between the local db and db on heroku
+        final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
 
         String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
@@ -365,7 +365,7 @@ public class Application extends Controller {
 
             System.out.println(randomNumber + " : right before testing!");
 
-            tester.testWithXmlString(finalXmlString.toString(), null);
+            tester.test(finalXmlString.toString(), null);
 
             List<Object> results = tester.getResults();
             for (Object thing : results) {

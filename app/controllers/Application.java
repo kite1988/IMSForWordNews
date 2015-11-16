@@ -122,7 +122,11 @@ public class Application extends Controller {
         try {
             System.out.println("opening connection");
             Class.forName("org.sqlite.JDBC");
-            conn = DriverManager.getConnection("jdbc:sqlite:dictionary.db");
+
+            File path = Play.application().path();
+            System.out.println("path is " + path.getAbsolutePath());
+            System.out.println("files are " + path.listFiles());
+            conn = DriverManager.getConnection("jdbc:sqlite:" + path.getAbsolutePath() + "/dictionary.db");
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.out.println("getChineseFromId : " + e.getClass().getName() + ": " + e.getMessage());
@@ -166,6 +170,7 @@ public class Application extends Controller {
             System.out.println("SELECT name FROM sqlite_master WHERE type = \"table\" below");
 
             int columnsNumber = rsmd.getColumnCount();
+            System.out.println("columns number " + columnsNumber);
             while (queryRes.next()) {
                 for (int i = 1; i <= columnsNumber; i++) {
                     if (i > 1) System.out.print(",  ");

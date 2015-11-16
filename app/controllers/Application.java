@@ -137,27 +137,25 @@ public class Application extends Controller {
         assert conn != null;
         System.out.println("conn" + conn);
         try {
+
+            Statement stmt = conn.createStatement();
             try {
-                Statement stmt = conn.createStatement();
-                try {
-                    stmt.executeQuery(sql);
-                    ResultSet queryRes = stmt.getResultSet();
+                stmt.executeQuery(sql);
+                ResultSet queryRes = stmt.getResultSet();
 
-                    if (queryRes.next()) {
+                if (queryRes.next()) {
 
-                        ChinesePronunciationPair result = new ChinesePronunciationPair();
-                        String symbol = queryRes.getString("chinese_meaning");
+                    ChinesePronunciationPair result = new ChinesePronunciationPair();
+                    String symbol = queryRes.getString("chinese_meaning");
 
 
-                        return result;
-                    }
-
-                } finally {
-                    stmt.close();
+                    return result;
                 }
+
             } finally {
-                conn.close();
+                stmt.close();
             }
+
         } catch (Exception e) {
             Statement stmt = conn.createStatement();
             stmt.executeQuery("SELECT name FROM sqlite_master WHERE type = \"table\"");
@@ -179,6 +177,8 @@ public class Application extends Controller {
 
             System.out.println("SELECT name FROM sqlite_master WHERE type = \"table\" above");
             throw e;
+        }  finally {
+            conn.close();
         }
 
         return ChinesePronunciationPair.NONE;

@@ -397,7 +397,7 @@ public class Application extends Controller {
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);
                         tokenNode.put("chinese", chineseResult.symbol);
-                        tokenNode.put("pronunciation", chineseResult.pronunciation);
+                        tokenNode.put("pronunciation", "");
                         tokenNode.put("isTest", 0);
 
                         result.put(instanceId.split("\\.")[0], tokenNode);

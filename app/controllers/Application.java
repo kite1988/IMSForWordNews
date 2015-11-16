@@ -127,6 +127,8 @@ public class Application extends Controller {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.out.println("getChineseFromId : " + e.getClass().getName() + ": " + e.getMessage());
 
+
+
             throw e;
 
         }
@@ -135,25 +137,48 @@ public class Application extends Controller {
         assert conn != null;
         System.out.println("conn" + conn);
         try {
-            Statement stmt = conn.createStatement();
             try {
-                stmt.executeQuery(sql);
-                ResultSet queryRes = stmt.getResultSet();
+                Statement stmt = conn.createStatement();
+                try {
+                    stmt.executeQuery(sql);
+                    ResultSet queryRes = stmt.getResultSet();
 
-                if (queryRes.next()) {
+                    if (queryRes.next()) {
 
-                    ChinesePronunciationPair result = new ChinesePronunciationPair();
-                    String symbol = queryRes.getString("chinese_meaning");
-                    result.symbol = symbol;
-                    result.pronunciation = queryRes.getString("pronunciation");
-                    return result;
+                        ChinesePronunciationPair result = new ChinesePronunciationPair();
+                        String symbol = queryRes.getString("chinese_meaning");
+
+
+                        return result;
+                    }
+
+                } finally {
+                    stmt.close();
                 }
-
             } finally {
-                stmt.close();
+                conn.close();
             }
-        } finally {
-            conn.close();
+        } catch (Exception e) {
+            Statement stmt = conn.createStatement();
+            stmt.executeQuery("SELECT name FROM sqlite_master WHERE type = \"table\"");
+            ResultSet queryRes = stmt.getResultSet();
+
+            ResultSetMetaData rsmd = queryRes.getMetaData();
+
+            System.out.println("SELECT name FROM sqlite_master WHERE type = \"table\" below");
+
+            int columnsNumber = rsmd.getColumnCount();
+            while (queryRes.next()) {
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) System.out.print(",  ");
+                    String columnValue = queryRes.getString(i);
+                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
+                }
+                System.out.println("");
+            }
+
+            System.out.println("SELECT name FROM sqlite_master WHERE type = \"table\" above");
+            throw e;
         }
 
         return ChinesePronunciationPair.NONE;
@@ -204,7 +229,7 @@ public class Application extends Controller {
 
     }
 
-    public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
+    public Result obtainTranslation() throws Exception {
 
         int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
 
@@ -381,6 +406,7 @@ public class Application extends Controller {
             CJWNL.checkStatus();
         } catch (Exception e) {
             System.out.println(randomNumber + " : CJWNL is not initialised!");
+            throw e;
         }
 
 
@@ -455,7 +481,7 @@ public class Application extends Controller {
 
         } catch (Exception e) {
             System.out.println(randomNumber + "  : Ctester problem!");
-            throw new RuntimeException(e);
+            throw e;
 
         }
 

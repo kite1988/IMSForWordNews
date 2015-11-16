@@ -122,12 +122,15 @@ public class Application extends Controller {
         try {
             System.out.println("opening connection");
             Class.forName("org.sqlite.JDBC");
-
+/*
             String basePath = Play.application().path().getPath();
             String fullPath = basePath + "/public/";
             System.out.println("path is " + basePath);
+
+
             System.out.println("files are " + new File(basePath).listFiles());
-            conn = DriverManager.getConnection("jdbc:sqlite:" + fullPath + "dictionary.db");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + fullPath + "dictionary.db");*/
+            conn = DriverManager.getConnection("jdbc:sqlite:dictionary.db");
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.out.println("getChineseFromId : " + e.getClass().getName() + ": " + e.getMessage());

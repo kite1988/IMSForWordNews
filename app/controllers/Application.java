@@ -88,7 +88,7 @@ public class Application extends Controller {
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
         final int chineseIdOffset = 2; // because there of differences between the local db and db on heroku
 
-        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
+        String sql = "SELECT chinese_meaning FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -102,7 +102,7 @@ public class Application extends Controller {
                     ChinesePronunciationPair result = new ChinesePronunciationPair();
                     String symbol = queryRes.getString("chinese_meaning");
                     result.symbol = symbol;
-                    result.pronunciation = queryRes.getString("pronunciation");
+                    
                     return result;
                 }
 

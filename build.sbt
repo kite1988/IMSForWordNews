@@ -13,9 +13,6 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies +=  "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
-libraryDependencies +=  "org.xerial" % "sqlite-jdbc" % "3.7.2"
-
-resolvers += "SQLite-JDBC Repository" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.

@@ -36,7 +36,10 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,7 +84,7 @@ public class Application extends Controller {
 
         return false;
     }
-/*
+
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
         final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
 
@@ -111,88 +114,7 @@ public class Application extends Controller {
         }
 
         return ChinesePronunciationPair.NONE;
-    }*/
-    private ChinesePronunciationPair getChineseFromId(Long chineseId) throws Exception {
-        final int chineseIdOffset = 0; // set to non-zero if there are differences between the local db and db on heroku
-
-        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
-
-
-        Connection conn = null;
-        try {
-            System.out.println("opening connection");
-            Class.forName("org.sqlite.JDBC");
-/*
-            String basePath = Play.application().path().getPath();
-            String fullPath = basePath + "/public/";
-            System.out.println("path is " + basePath);
-
-
-            System.out.println("files are " + new File(basePath).listFiles());
-            conn = DriverManager.getConnection("jdbc:sqlite:" + fullPath + "dictionary.db");*/
-            conn = DriverManager.getConnection("jdbc:sqlite:public/dictionary.db");
-        } catch ( Exception e ) {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-            System.out.println("getChineseFromId : " + e.getClass().getName() + ": " + e.getMessage());
-
-
-
-            throw e;
-
-        }
-
-
-        assert conn != null;
-        System.out.println("conn" + conn);
-        try {
-
-            Statement stmt = conn.createStatement();
-            try {
-                stmt.executeQuery(sql);
-                ResultSet queryRes = stmt.getResultSet();
-
-                if (queryRes.next()) {
-
-                    ChinesePronunciationPair result = new ChinesePronunciationPair();
-                    String symbol = queryRes.getString("chinese_meaning");
-
-
-                    return result;
-                }
-
-            } finally {
-                stmt.close();
-            }
-
-        } catch (Exception e) {
-            Statement stmt = conn.createStatement();
-            stmt.executeQuery("SELECT name FROM sqlite_master WHERE type = \"table\"");
-            ResultSet queryRes = stmt.getResultSet();
-
-            ResultSetMetaData rsmd = queryRes.getMetaData();
-
-            System.out.println("SELECT name FROM sqlite_master WHERE type = \"table\" below");
-
-            int columnsNumber = rsmd.getColumnCount();
-            System.out.println("columns number " + columnsNumber);
-            while (queryRes.next()) {
-                for (int i = 1; i <= columnsNumber; i++) {
-                    if (i > 1) System.out.print(",  ");
-                    String columnValue = queryRes.getString(i);
-                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
-                }
-                System.out.println("");
-            }
-
-            System.out.println("SELECT name FROM sqlite_master WHERE type = \"table\" above");
-            throw e;
-        }  finally {
-            conn.close();
-        }
-
-        return ChinesePronunciationPair.NONE;
     }
-
 
     private static class ChinesePronunciationPair {
         String symbol;
@@ -238,7 +160,7 @@ public class Application extends Controller {
 
     }
 
-    public Result obtainTranslation() throws Exception {
+    public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
 
         int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
 
@@ -415,7 +337,6 @@ public class Application extends Controller {
             CJWNL.checkStatus();
         } catch (Exception e) {
             System.out.println(randomNumber + " : CJWNL is not initialised!");
-            throw e;
         }
 
 
@@ -490,7 +411,7 @@ public class Application extends Controller {
 
         } catch (Exception e) {
             System.out.println(randomNumber + "  : Ctester problem!");
-            throw e;
+            throw new RuntimeException(e);
 
         }
 
@@ -537,9 +458,6 @@ public class Application extends Controller {
                 } catch (NumberFormatException e) {
                     // silenced because it is U
                     assert tokensInResultsLine[2].equals("U");
-                } catch (Exception e) {
-                    System.out.println("exception");
-                    e.printStackTrace();
                 }
             }
 

@@ -122,7 +122,7 @@ public class Application extends Controller {
         try {
             System.out.println("opening connection");
             Class.forName("org.sqlite.JDBC");
-            conn = DriverManager.getConnection("jdbc:sqlite:database.db");
+            conn = DriverManager.getConnection("jdbc:sqlite:dictionary.db");
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.out.println("getChineseFromId : " + e.getClass().getName() + ": " + e.getMessage());

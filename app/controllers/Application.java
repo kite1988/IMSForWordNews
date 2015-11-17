@@ -355,7 +355,7 @@ public class Application extends Controller {
             System.out.println(randomNumber + " : evaluator set!");
             System.out.println(evaluator);
 
-            String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
+            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
             System.out.println(randomNumber + " : feature extractor set");

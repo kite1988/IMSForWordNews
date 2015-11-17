@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.didion.jwnl.JWNLException;
 import play.*;
 import play.api.libs.ws.ssl.SystemConfiguration;
-import play.core.j.HttpExecutionContext;
 import play.libs.Json;
 import play.mvc.*;
 import play.api.db.*;
@@ -50,8 +49,17 @@ import java.util.zip.GZIPInputStream;
 
 public class Application extends Controller {
 
+    static SennaWordEmbeddings embeddings = SennaWordEmbeddings.instance();
 
     public Result index() {
+        CTester tester = new CTester();
+        String type = "file";
+        String modelDir = "trainedDir";
+        String statDir = "trainedDir";
+        String saveDir = "resultDir";
+        String evaluatorName = sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator.class.getName();
+        String writerName = sg.edu.nus.comp.nlp.ims.io.CResultWriter.class.getName();
+        String lexeltFile = null;
 
         return ok(index.render("Your new application is ready.!!"));
     }
@@ -86,9 +94,9 @@ public class Application extends Controller {
     }
 
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
-        final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
+        final int chineseIdOffset = 2; // because there of differences between the local db and db on heroku
 
-        String sql = "SELECT chinese_meaning FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
+        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -102,7 +110,7 @@ public class Application extends Controller {
                     ChinesePronunciationPair result = new ChinesePronunciationPair();
                     String symbol = queryRes.getString("chinese_meaning");
                     result.symbol = symbol;
-                    
+                    result.pronunciation = queryRes.getString("pronunciation");
                     return result;
                 }
 
@@ -143,26 +151,8 @@ public class Application extends Controller {
         return ok(index.render(listOfFilesInDirectory.toString()));
     }
 
-    public Result showTempTestFiles() throws IOException {
-        File dir = new File(".");
-        File[] a = dir.listFiles();
-        for (File f : a) {
-            System.out.println(f.getName());
-        }
-        List<File> listOfFilesInDirectory = Arrays.asList(a);
-
-        return ok(index.render(listOfFilesInDirectory.toString()));
-    }
-
-    public void logMessage(String message) {
-        ;
-
-
-    }
 
     public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
-
-        int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
 
         long startTime = System.currentTimeMillis();
         // extract request params
@@ -179,8 +169,6 @@ public class Application extends Controller {
         }
 
         ObjectNode result = Json.newObject();
-        System.out.println(randomNumber + " : starting! ");
-
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
@@ -199,7 +187,7 @@ public class Application extends Controller {
             }
         }
 
-        System.out.println(randomNumber + " : after obtaining words to trans ");
+        System.out.println("after obtaining words to trans");
         System.out.println(System.currentTimeMillis() - startTime);
 
         // write to files expected by ims
@@ -245,10 +233,8 @@ public class Application extends Controller {
             context.setTextContent(" " + amendedTextContent + " ");
         }
 
-
+        int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
         String testTempFileName = "temptestfile" + randomNumber;
-
-        String xmlString = null;
         // write to xml
         try {
             Transformer tr = TransformerFactory.newInstance().newTransformer();
@@ -257,21 +243,21 @@ public class Application extends Controller {
             tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
 
             // send DOM to file
-            StringWriter writer = new StringWriter();
+
             tr.transform(new DOMSource(doc),
-                         new StreamResult(writer));
+                         new StreamResult(new FileOutputStream(testTempFileName)));
 
-            writer.flush();
-
-            xmlString = writer.toString();
         } catch (TransformerException te) {
             System.out.println(te.getMessage());
             throw te;
+        } catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+            throw ioe;
         }
 
         // todo use filelock / or remove the need for files altogether
         // write to format expected by ims
-        /*String testFileName = testTempFileName + "_test.xml" ;
+        String testFileName = testTempFileName + "_test.xml" ;
         try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
             try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
                 String lineInFile;
@@ -296,27 +282,9 @@ public class Application extends Controller {
                     }
                 }
             }
-        }*/
-        StringBuilder finalXmlString = new StringBuilder();
-        for (String line : xmlString.split(System.getProperty("line.separator"))) {
-            String[] lineInFileAsTokens = line.split(" ");
-            StringBuilder updatedLine = new StringBuilder();
-            for (String tokenInFile : lineInFileAsTokens) {
-                if (tokenInFile.contains(testFlag)) {
-                    String targetToken = tokenInFile.split(testFlag)[1];
-                    updatedLine.append("<head>" + targetToken + "</head>");
-                } else {
-                    updatedLine.append(tokenInFile);
-                }
-                updatedLine.append(' ');
-            }
-
-            finalXmlString.append(updatedLine.toString());
         }
 
-        System.out.println(finalXmlString);
-
-        System.out.println(randomNumber + " : after writing to test file: " + testTempFileName);
+        System.out.println("after writing to test files");
         System.out.println(System.currentTimeMillis() - startTime);
 
         // key file.... doesn't matter
@@ -328,46 +296,40 @@ public class Application extends Controller {
 
         String lexeltFile = null;
 
-
-        System.out.println(randomNumber + " : before initialise models and pos dictionary for tester");
-
-        // checks JWordNet
-
+        // initial JWordNet
         try {
-            CJWNL.checkStatus();
-        } catch (Exception e) {
-            System.out.println(randomNumber + " : CJWNL is not initialised!");
+            CJWNL.initial(new FileInputStream("lib/prop.xml"));
+            try {
+                CJWNL.checkStatus();
+            } catch (Exception e) {
+                System.out.println("not init!");
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            throw e;
+        } catch (JWNLException e) {
+            e.printStackTrace();
+            throw e;
         }
 
+        COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
+        COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
-
-        System.out.println(randomNumber + " : after initialise models and pos dictionary for tester");
+        System.out.println("after initialise models and pos dictionary for tester");
         System.out.println(System.currentTimeMillis() - startTime);
 
         try {
-            String evaluatorName = CLibLinearEvaluator.class.getName();
-            IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName).newInstance();
-            evaluator.setOptions(new String[]{"-m", "trainedDir", "-s", "trainedDir"});
-            
-            tester.setEvaluator(evaluator);
-            System.out.println(randomNumber + " : evaluator set!");
-            System.out.println(evaluator);
-
-            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
+            tester.setEvaluator(ImsWrapper.getEvaluator());
+            String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
-
-            System.out.println(randomNumber + " : feature extractor set");
-            System.out.println(featureExtractorName);
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
-            System.out.println(randomNumber + " : right before testing!");
-
-            tester.testWithXmlString(finalXmlString.toString(), null);
+            tester.test(testFileName);
 
             List<Object> results = tester.getResults();
             for (Object thing : results) {
-                System.out.println(randomNumber + " : RESULT!");
+                System.out.println("RESULT!");
                 CResultInfo imsResult = (CResultInfo)thing;
                 System.out.println(imsResult.size());
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
@@ -386,8 +348,7 @@ public class Application extends Controller {
                             // no result found, don't include in the returned json
 
                             // this pretty much means a bad assumption has been made
-                            // but let's not assert for now, just log and fail
-                            System.out.println(randomNumber  + "  : UNABLE TO OBTAIN CHINESE TRANSLATION!");
+                            System.out.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             System.err.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
                             continue;
                         }
@@ -395,25 +356,25 @@ public class Application extends Controller {
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);
                         tokenNode.put("chinese", chineseResult.symbol);
-                        tokenNode.put("pronunciation", "");
+                        tokenNode.put("pronunciation", chineseResult.pronunciation);
                         tokenNode.put("isTest", 0);
 
                         result.put(instanceId.split("\\.")[0], tokenNode);
                     } catch (NumberFormatException e) {
                         // silenced because it is U
-                        System.out.println(randomNumber + " : WE MESSED UP!");
+                        System.out.println("WE MESSED UP!");
                         assert id.equals("U");
                     }
                 }
             }
 
         } catch (Exception e) {
-            System.out.println(randomNumber + "  : Ctester problem!");
+            System.out.println("Ctester problem!");
             throw new RuntimeException(e);
 
         }
 
-        System.out.println(randomNumber  + " : just before return");
+        System.out.println("just before return");
         System.out.println(System.currentTimeMillis() - startTime);
 
         return ok(result);

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.didion.jwnl.JWNLException;
 import play.*;
-import play.api.libs.ws.ssl.SystemConfiguration;
 import play.libs.Json;
 import play.mvc.*;
 import play.api.db.*;
@@ -19,7 +18,6 @@ import sg.edu.nus.comp.nlp.ims.lexelt.CResultInfo;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
-import util.ImsWrapper;
 import views.html.*;
 
 import org.w3c.dom.*;
@@ -27,7 +25,9 @@ import org.w3c.dom.*;
 
 import sg.edu.nus.comp.nlp.ims.implement.CTester;
 import sg.edu.nus.comp.nlp.ims.classifiers.IEvaluator;
+import sg.edu.nus.comp.nlp.ims.io.IResultWriter;
 
+import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -49,11 +49,13 @@ import java.util.zip.GZIPInputStream;
 
 public class Application extends Controller {
 
+
     static SennaWordEmbeddings embeddings = SennaWordEmbeddings.instance();
 
     public Result index() {
         CTester tester = new CTester();
         String type = "file";
+       // File testPath = new File("generated_ims_format_text.xml");
         String modelDir = "trainedDir";
         String statDir = "trainedDir";
         String saveDir = "resultDir";
@@ -94,9 +96,10 @@ public class Application extends Controller {
     }
 
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
-        final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
+        final int chineseIdOffset = 2; // because there of differences between the local db and db on heroku
 
-        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
+        System.out.println(chineseId);
+        String sql = "SELECT chinese_meaning FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -135,20 +138,21 @@ public class Application extends Controller {
     public Result showTrainedDir() throws IOException {
         File dir = new File("trainedDir");
         File[] a = dir.listFiles();
-        List<File> listOfFilesInDirectory = Arrays.asList(a);
-
+        List<File> heh = Arrays.asList(a);
+        System.out.println(heh.get(0).getAbsolutePath());
         BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new GZIPInputStream(new FileInputStream(listOfFilesInDirectory.get(0))), "ISO8859-1"));
+                new GZIPInputStream(new FileInputStream(heh.get(0))), "ISO8859-1"));
 
         String line ;
         int count = 0;
         while ((line = reader.readLine()) != null) {
             count ++;
         }
+        System.out.println("  :: " + count);
 
         reader.close();
 
-        return ok(index.render(listOfFilesInDirectory.toString()));
+        return ok(index.render(heh.toString()));
     }
 
 
@@ -186,9 +190,6 @@ public class Application extends Controller {
                 throw e;
             }
         }
-
-        System.out.println("after obtaining words to trans");
-        System.out.println(System.currentTimeMillis() - startTime);
 
         // write to files expected by ims
         // xml file
@@ -255,13 +256,14 @@ public class Application extends Controller {
             throw ioe;
         }
 
-        // todo use filelock / or remove the need for files altogether
+        // todo use filelock
         // write to format expected by ims
         String testFileName = testTempFileName + "_test.xml" ;
         try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
             try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
                 String lineInFile;
                 while ((lineInFile = tempFileReader.readLine()) != null) {
+
                     if (lineInFile.contains(testFlag)) {
                         StringBuilder updatedLine = new StringBuilder();
 
@@ -280,30 +282,47 @@ public class Application extends Controller {
                     } else {
                         testFileWriter.write(lineInFile);
                     }
+
                 }
             }
         }
 
-        System.out.println("after writing to test files");
-        System.out.println(System.currentTimeMillis() - startTime);
+
+    /*    try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
+
+            String lineInFile;
+            while ((lineInFile = tempFileReader.readLine()) != null) {
+
+
+                System.out.println(lineInFile);
+
+
+            }
+            System.out.println(" in file : " + testFileName);
+            System.out.println("         : " + new File(testFileName).getAbsolutePath());
+        }*/
 
         // key file.... doesn't matter
+
+        System.out.println(System.currentTimeMillis() - startTime);
+        System.out.println("before preparing tester");
+        System.out.println(System.currentTimeMillis() - startTime);
 
         // run tester
 
         CTester tester = new CTester();
         String type = "file";
-
+        //File testPath = new File("generated_ims_format_text.xml");
+        String modelDir = "trainedDir";
+        String statDir = "trainedDir";
+        String saveDir = "resultDir";
+        String evaluatorName = CLibLinearEvaluator.class.getName();
+        String writerName = CResultWriter.class.getName();
         String lexeltFile = null;
 
         // initial JWordNet
         try {
             CJWNL.initial(new FileInputStream("lib/prop.xml"));
-            try {
-                CJWNL.checkStatus();
-            } catch (Exception e) {
-                System.out.println("not init!");
-            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             throw e;
@@ -312,46 +331,48 @@ public class Application extends Controller {
             throw e;
         }
 
+
         COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
         COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
-        System.out.println("after initialise models and pos dictionary for tester");
-        System.out.println(System.currentTimeMillis() - startTime);
+
 
         try {
-            tester.setEvaluator(ImsWrapper.getEvaluator());
-            String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
+            IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName)
+                    .newInstance();
+
+            evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
+
+
+            // set result writer
+            writerName = CResultWriter.class.getName();
+
+            IResultWriter writer = (IResultWriter) Class.forName(writerName)
+                    .newInstance();
+            writer.setOptions(new String[]{"-s", saveDir});
+
+            tester.setEvaluator(evaluator);
+            tester.setWriter(writer);
+
+            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
+
             tester.test(testFileName);
 
-            List<Object> results = tester.getResults();
+            List<Object> results = (List<Object>)tester.getResults();
             for (Object thing : results) {
-                System.out.println("RESULT!");
                 CResultInfo imsResult = (CResultInfo)thing;
-                System.out.println(imsResult.size());
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
                     String docID = imsResult.getDocID(instIdx);
                     String instanceId = imsResult.getID(instIdx);
                     String id = imsResult.classes[imsResult.getAnswer(instIdx)];
 
-                    System.out.println("====");
-                    System.out.println(id);
-
                     try {
                         long senseId = Long.parseLong(id);
                         ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
-
-                        if (chineseResult == ChinesePronunciationPair.NONE) {
-                            // no result found, don't include in the returned json
-
-                            // this pretty much means a bad assumption has been made
-                            System.out.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
-                            System.err.println("UNABLE TO OBTAIN CHINESE TRANSLATION!");
-                            continue;
-                        }
 
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);
@@ -362,11 +383,18 @@ public class Application extends Controller {
                         result.put(instanceId.split("\\.")[0], tokenNode);
                     } catch (NumberFormatException e) {
                         // silenced because it is U
-                        System.out.println("WE MESSED UP!");
                         assert id.equals("U");
                     }
                 }
+
             }
+
+
+            // read from results dir
+            //File resultsDirectory = new File(saveDir);
+            //File[] filesInDirectory = resultsDirectory.listFiles();
+            //handleResultsDir(result, filesInDirectory);
+
 
         } catch (Exception e) {
             System.out.println("Ctester problem!");
@@ -374,20 +402,16 @@ public class Application extends Controller {
 
         }
 
-        System.out.println("just before return");
+        System.out.println("bef return");
         System.out.println(System.currentTimeMillis() - startTime);
-
         return ok(result);
     }
 
     private void handleResultsDir(ObjectNode result, File[] filesInDirectory) throws IOException, SQLException {
         // there should only be one file
         for (File fileInDirectory : filesInDirectory) {
+            System.out.println(fileInDirectory.getAbsolutePath());
             if (fileInDirectory.getName().equals("aaa")) {
-                // Needed to commit this file, somehow I needed to commit a directory to heroku
-                // (it didn't have permission to create a directory on its own, it seems)
-                // (and to commit a directory, need to have a file in it)
-
                 continue; // skip dummy file
             }
             BufferedReader bufferedReader = new BufferedReader(
@@ -396,6 +420,8 @@ public class Application extends Controller {
             String lineFromResultFile;
             int fileLen = 0;
             while ((lineFromResultFile = bufferedReader.readLine()) != null) {
+                System.out.println(lineFromResultFile);
+                System.out.println("=====================================");
 
 
                 fileLen++;
@@ -419,6 +445,8 @@ public class Application extends Controller {
                     assert tokensInResultsLine[2].equals("U");
                 }
             }
+
+            System.out.println("len: " + fileLen);
 
             fileInDirectory.delete();
         }

@@ -340,8 +340,6 @@ public class Application extends Controller {
         }
 
 
-        COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
-        COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
 
         System.out.println(randomNumber + " : after initialise models and pos dictionary for tester");
         System.out.println(System.currentTimeMillis() - startTime);

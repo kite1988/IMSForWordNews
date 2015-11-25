@@ -99,7 +99,7 @@ public class Application extends Controller {
         final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
 
         System.out.println(chineseId);
-        String sql = "SELECT chinese_meaning FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
+        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
         Connection conn = play.db.DB.getConnection();
         try {
@@ -111,9 +111,9 @@ public class Application extends Controller {
                 if (queryRes.next()) {
 
                     ChinesePronunciationPair result = new ChinesePronunciationPair();
-                    String symbol = queryRes.getString("chinese_meaning");
-                    result.symbol = symbol;
-                    result.pronunciation = "";
+
+                    result.symbol = queryRes.getString("chinese_meaning");
+                    result.pronunciation = queryRes.getString("pronunciation");
                     return result;
                 }
 
@@ -377,7 +377,7 @@ public class Application extends Controller {
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);
                         tokenNode.put("chinese", chineseResult.symbol);
-                        tokenNode.put("pronunciation", "");
+                        tokenNode.put("pronunciation", chineseResult.pronunciation);
                         tokenNode.put("isTest", 0);
 
                         result.put(instanceId.split("\\.")[0], tokenNode);

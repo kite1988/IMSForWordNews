@@ -165,6 +165,8 @@ public class Application extends Controller {
         String name = values.get("name")[0];
         String url = values.get("url")[0];
         String num_words = values.get("num_words")[0];
+        System.out.println("start with ... " + textContent + " to find " + num_words + " words");
+
         int numWords;
         try {
             numWords = Integer.parseInt(num_words);

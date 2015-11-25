@@ -356,7 +356,7 @@ public class Application extends Controller {
             tester.setEvaluator(evaluator);
             tester.setWriter(writer);
 
-            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
+            String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");

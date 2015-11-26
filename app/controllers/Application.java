@@ -182,6 +182,7 @@ public class Application extends Controller {
         for (String token : tokensInText ) {
             try {
                 if (isWordInDictionary(token.toLowerCase())) {
+                    System.out.print(token.toLowerCase() + " , ");
                     wordsThatCanBeTranslated.add(token);
                     if (wordsThatCanBeTranslated.size() >= numWords) {
                         break;
@@ -192,6 +193,7 @@ public class Application extends Controller {
                 throw e;
             }
         }
+        System.out.println();
 
         // write to files expected by ims
         // xml file

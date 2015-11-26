@@ -18,6 +18,7 @@ import sg.edu.nus.comp.nlp.ims.lexelt.CResultInfo;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
+import sg.edu.nus.comp.nlp.ims.util.CSurroundingWordFilter;
 import views.html.*;
 
 import org.w3c.dom.*;
@@ -181,7 +182,7 @@ public class Application extends Controller {
         String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", "").toLowerCase().split("\\s+");
         for (String token : tokensInText ) {
             try {
-                if (isWordInDictionary(token.toLowerCase())) {
+                if (!CSurroundingWordFilter.getInstance().filter(token.toLowerCase()) && isWordInDictionary(token.toLowerCase())) {
                     System.out.print(token.toLowerCase() + " , ");
                     wordsThatCanBeTranslated.add(token);
                     if (wordsThatCanBeTranslated.size() >= numWords) {

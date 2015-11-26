@@ -178,7 +178,7 @@ public class Application extends Controller {
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
-        String[] tokensInText = textContent.split(" ");
+        String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", "").toLowerCase().split("\\s+");
         for (String token : tokensInText ) {
             try {
                 if (isWordInDictionary(token.toLowerCase())) {

@@ -179,11 +179,11 @@ public class Application extends Controller {
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
-        String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", "").toLowerCase().split("\\s+");
+        String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", "").split("\\s+");
         for (String token : tokensInText ) {
             try {
                 if (!CSurroundingWordFilter.getInstance().filter(token.toLowerCase()) && isWordInDictionary(token.toLowerCase())) {
-                    System.out.print(token.toLowerCase() + " , ");
+                    System.out.print(token + " , ");
                     wordsThatCanBeTranslated.add(token);
                     if (wordsThatCanBeTranslated.size() >= numWords) {
                         break;

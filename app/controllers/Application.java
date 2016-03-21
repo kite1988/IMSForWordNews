@@ -51,8 +51,6 @@ import java.util.zip.GZIPInputStream;
 public class Application extends Controller {
 
 
-    static SennaWordEmbeddings embeddings = SennaWordEmbeddings.instance();
-
     public Result index() {
         CTester tester = new CTester();
         String type = "file";

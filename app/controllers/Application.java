@@ -177,7 +177,7 @@ public class Application extends Controller {
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
-        String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", "").split("\\s+");
+        String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", " ").split("\\s+");
         for (String token : tokensInText ) {
             try {
                 if (!CSurroundingWordFilter.getInstance().filter(token.toLowerCase()) && isWordInDictionary(token.toLowerCase())) {
@@ -357,7 +357,7 @@ public class Application extends Controller {
             tester.setEvaluator(evaluator);
             tester.setWriter(writer);
 
-            String featureExtractorName = CAllWordsFeatureExtractorCombinationWithSenna.class.getName();
+            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             tester.setFeatureExtractorName(featureExtractorName);
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");

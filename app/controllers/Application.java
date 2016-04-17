@@ -178,7 +178,7 @@ public class Application extends Controller {
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
         String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", " ").split("\\s+");
-        
+
         for (String token : tokensInText ) {
             try {
                 if (//!CSurroundingWordFilter.getInstance().filter(token.toLowerCase())
@@ -383,11 +383,15 @@ public class Application extends Controller {
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);
                         tokenNode.put("chinese", chineseResult.symbol);
+                        System.out.println("result of " + instanceId);
+                        System.out.println(chineseResult.symbol);
                         tokenNode.put("pronunciation", chineseResult.pronunciation);
                         tokenNode.put("isTest", 0);
 
                         result.put(instanceId.split("\\.")[0], tokenNode);
                     } catch (NumberFormatException e) {
+                        System.out.println("result of " + instanceId);
+                        System.out.println("U");
                         // silenced because it is U
                         assert id.equals("U");
                     }

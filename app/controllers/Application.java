@@ -177,7 +177,7 @@ public class Application extends Controller {
 
         // find words to translate
         List<String> wordsThatCanBeTranslated = new ArrayList<>();
-        String[] tokensInText = textContent.replaceAll("[^a-zA-Z ]", " ").split("\\s+");
+        String[] tokensInText = textContent.replaceAll("[^a-zA-Z- ]", " ").split("\\s+");
 
         for (String token : tokensInText ) {
             try {

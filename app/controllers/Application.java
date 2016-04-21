@@ -66,25 +66,20 @@ public class Application extends Controller {
     }
 
     private boolean isWordInDictionary(String word) throws SQLException {
-        try {
-            String sql = "SELECT id FROM english_words WHERE english_meaning = '" + word + "'";
+        try (
+                Connection conn = play.db.DB.getConnection();
+        ) {
+            try (
+                    Statement stmt = conn.createStatement()
+            ) {
+                String sql = "SELECT id FROM english_words WHERE english_meaning = '" + word + "'";
+                stmt.executeQuery(sql);
+                ResultSet queryRes = stmt.getResultSet();
 
-            Connection conn = play.db.DB.getConnection();
-            try {
-                Statement stmt = conn.createStatement();
-                try {
-                    stmt.executeQuery(sql);
-                    ResultSet queryRes = stmt.getResultSet();
-
-                    if (queryRes.next()) {
-                        return true;
-                    }
-
-                } finally {
-                    stmt.close();
+                if (queryRes.next()) {
+                    return true;
                 }
-            } finally {
-                conn.close();
+
             }
         } catch (Exception e) {
             //pass
@@ -95,20 +90,20 @@ public class Application extends Controller {
     }
 
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
-        final int chineseIdOffset = 0; // because there of differences between the local db and db on heroku
+        final int chineseIdOffset = 0; // set to non-zero if there are differences between the local db and db on heroku
 
-        System.out.println(chineseId);
         String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
 
-        Connection conn = play.db.DB.getConnection();
-        try {
-            Statement stmt = conn.createStatement();
-            try {
+        try (
+                Connection conn = play.db.DB.getConnection()
+        ) {
+            try (
+                    Statement stmt = conn.createStatement()
+            )  {
                 stmt.executeQuery(sql);
                 ResultSet queryRes = stmt.getResultSet();
 
                 if (queryRes.next()) {
-
                     ChinesePronunciationPair result = new ChinesePronunciationPair();
 
                     result.symbol = queryRes.getString("chinese_meaning");
@@ -116,11 +111,7 @@ public class Application extends Controller {
                     return result;
                 }
 
-            } finally {
-                stmt.close();
             }
-        } finally {
-            conn.close();
         }
 
         return ChinesePronunciationPair.NONE;
@@ -135,23 +126,29 @@ public class Application extends Controller {
 
 
     public Result showTrainedDir() throws IOException {
-        File dir = new File("trainedDir");
-        File[] a = dir.listFiles();
-        List<File> heh = Arrays.asList(a);
-        System.out.println(heh.get(0).getAbsolutePath());
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new GZIPInputStream(new FileInputStream(heh.get(0))), "ISO8859-1"));
+
+        List<File> files = Arrays.asList(
+                new File("trainedDir").listFiles()
+        );
+
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(
+                    new GZIPInputStream(
+                        new FileInputStream(
+                                files.get(0)
+                        )
+                    ), "ISO8859-1")
+        );
 
         String line ;
         int count = 0;
         while ((line = reader.readLine()) != null) {
             count ++;
         }
-        System.out.println("  :: " + count);
 
         reader.close();
 
-        return ok(index.render(heh.toString()));
+        return ok(index.render(files.toString()));
     }
 
 
@@ -159,7 +156,9 @@ public class Application extends Controller {
 
         long startTime = System.currentTimeMillis();
         // extract request params
-        final Map<String, String[]> values = request().body().asFormUrlEncoded();
+        final Map<String, String[]> values = request()
+                .body()
+                .asFormUrlEncoded();
         String textContent = values.get("text")[0];
         String name = values.get("name")[0];
         String url = values.get("url")[0];
@@ -195,7 +194,6 @@ public class Application extends Controller {
                 throw e;
             }
         }
-        System.out.println();
 
         // write to files expected by ims
         // xml file
@@ -220,7 +218,6 @@ public class Application extends Controller {
             Element lexelt = doc.createElement("lexelt");
             lexelt.setAttribute("item", token);
             rootElement.appendChild(lexelt);
-            // lexelt.setAttribute("item", );
 
             Element instance = doc.createElement("instance");
             lexelt.appendChild(instance);
@@ -252,7 +249,10 @@ public class Application extends Controller {
             // send DOM to file
 
             tr.transform(new DOMSource(doc),
-                         new StreamResult(new FileOutputStream(testTempFileName)));
+                         new StreamResult(
+                                 new FileOutputStream(testTempFileName)
+                         )
+            );
 
         } catch (TransformerException te) {
             System.out.println(te.getMessage());
@@ -310,15 +310,11 @@ public class Application extends Controller {
 
         // key file.... doesn't matter
 
-        System.out.println(System.currentTimeMillis() - startTime);
-        System.out.println("before preparing tester");
-        System.out.println(System.currentTimeMillis() - startTime);
-
         // run tester
 
         CTester tester = new CTester();
         String type = "file";
-        //File testPath = new File("generated_ims_format_text.xml");
+
         String modelDir = "trainedDir";
         String statDir = "trainedDir";
         String saveDir = "resultDir";
@@ -396,24 +392,12 @@ public class Application extends Controller {
                         assert id.equals("U");
                     }
                 }
-
             }
 
-
-            // read from results dir
-            //File resultsDirectory = new File(saveDir);
-            //File[] filesInDirectory = resultsDirectory.listFiles();
-            //handleResultsDir(result, filesInDirectory);
-
-
         } catch (Exception e) {
-            System.out.println("Ctester problem!");
             throw new RuntimeException(e);
-
         }
 
-        System.out.println("bef return");
-        System.out.println(System.currentTimeMillis() - startTime);
         return ok(result);
     }
 

@@ -47,41 +47,24 @@ public class Application extends Controller {
 
 
     public Result index() {
-        CTester tester = new CTester();
-        String type = "file";
-       // File testPath = new File("generated_ims_format_text.xml");
-        String modelDir = "trainedDir";
-        String statDir = "trainedDir";
-        String saveDir = "resultDir";
-        String evaluatorName = sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator.class.getName();
-        String writerName = sg.edu.nus.comp.nlp.ims.io.CResultWriter.class.getName();
-        String lexeltFile = null;
-
-        return ok(index.render("Your new application is ready.!!"));
+        return ok(index.render("WordNews!"));
     }
 
-    private boolean isWordInDictionary(String word) throws SQLException {
+    private boolean isWordInDictionary(String word) throws Exception {
         try (
                 Connection conn = play.db.DB.getConnection();
         ) {
             try (
                     Statement stmt = conn.createStatement()
             ) {
-                String sql = "SELECT id FROM english_words WHERE english_meaning = '" + word + "'";
-                stmt.executeQuery(sql);
+                stmt.executeQuery(
+                        "SELECT id FROM english_words WHERE english_meaning = '" + word + "'"
+                );
                 ResultSet queryRes = stmt.getResultSet();
 
-                if (queryRes.next()) {
-                    return true;
-                }
-
+                return queryRes.next();
             }
-        } catch (Exception e) {
-            //pass
-            // just return false
         }
-
-        return false;
     }
 
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
@@ -293,52 +276,10 @@ public class Application extends Controller {
             }
         }
 
-
-        // key file.... doesn't matter
-
-        // run tester
-
-        CTester senseDisambiguator = new CTester();
-        String type = "file";
-
-        String modelDir = "trainedDir";
-        String statDir = "trainedDir";
-        String saveDir = "resultDir";
-        String evaluatorName = CLibLinearEvaluator.class.getName();
-        String writerName = CResultWriter.class.getName();
-        String lexeltFile = null;
-
-        // initial JWordNet
         try {
-            CJWNL.initial(new FileInputStream("lib/prop.xml"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            throw e;
-        } catch (JWNLException e) {
-            e.printStackTrace();
-            throw e;
-        }
+            CTester senseDisambiguator = new CTester();
 
-
-        COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
-        COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
-
-
-
-        try {
-            //IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName)
-            //        .newInstance();
-
-            //evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
             IEvaluator evaluator = ImsWrapper.getEvaluator();
-
-            // set result writer
-            //writerName = CResultWriter.class.getName();
-
-            //IResultWriter writer = (IResultWriter) Class.forName(writerName)
-            //        .newInstance();
-            //writer.setOptions(new String[]{"-s", saveDir});
-
             IResultWriter writer = ImsWrapper.getWriter();
 
             senseDisambiguator.setEvaluator(evaluator);
@@ -347,14 +288,11 @@ public class Application extends Controller {
             String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
             senseDisambiguator.setFeatureExtractorName(featureExtractorName);
 
-            COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
-
-
             senseDisambiguator.test(testFileName);
 
-            List<Object> results = (List<Object>)senseDisambiguator.getResults();
-            for (Object thing : results) {
-                CResultInfo imsResult = (CResultInfo)thing;
+            List<Object> results = senseDisambiguator.getResults();
+            for (Object resultObj : results) {
+                CResultInfo imsResult = (CResultInfo)resultObj;
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {
                     String docID = imsResult.getDocID(instIdx);
                     String instanceId = imsResult.getID(instIdx);
@@ -364,17 +302,15 @@ public class Application extends Controller {
                         long senseId = Long.parseLong(id);
                         ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
 
-                        ObjectNode tokenNode = Json.newObject();
-                        tokenNode.put("wordId", senseId);
-                        tokenNode.put("chinese", chineseResult.symbol);
-
-                        tokenNode.put("pronunciation", chineseResult.pronunciation);
-                        tokenNode.put("isTest", 0);
+                        ObjectNode tokenNode =
+                                Json.newObject()
+                                        .put("wordId", senseId)
+                                        .put("chinese", chineseResult.symbol)
+                                        .put("pronunciation", chineseResult.pronunciation)
+                                        .put("isTest", 0);
 
                         result.put(instanceId.split("\\.")[0], tokenNode);
                     } catch (NumberFormatException e) {
-                        System.out.println("result of " + instanceId);
-                        System.out.println("U");
                         // silenced because it is U
                         assert id.equals("U");
                     }

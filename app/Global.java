@@ -5,6 +5,7 @@ import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
 import sg.edu.nus.comp.nlp.ims.classifiers.IEvaluator;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
+import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
 import util.ImsWrapper;
 
 import java.io.FileInputStream;
@@ -49,6 +50,13 @@ public class Global extends GlobalSettings {
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Problem initialising COpenNLPPostTagger", e);
+        }
+
+        try {
+            COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Problem initialising Sentence Splitter", e);
         }
 
 

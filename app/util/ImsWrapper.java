@@ -2,6 +2,7 @@ package util;
 
 import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
 import sg.edu.nus.comp.nlp.ims.classifiers.IEvaluator;
+import sg.edu.nus.comp.nlp.ims.implement.CTester;
 import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
 import sg.edu.nus.comp.nlp.ims.io.IResultWriter;
 
@@ -12,6 +13,8 @@ public class ImsWrapper {
 
     static IEvaluator evaluator;
     static IResultWriter writer;
+
+    public static CTester disambiguator;
 
     public static IEvaluator getEvaluator() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         if (evaluator == null) {

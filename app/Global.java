@@ -1,8 +1,15 @@
 
+import net.didion.jwnl.JWNLException;
 import play.*;
 import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
 import sg.edu.nus.comp.nlp.ims.classifiers.IEvaluator;
+import sg.edu.nus.comp.nlp.ims.util.CJWNL;
+import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
 import util.ImsWrapper;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class Global extends GlobalSettings {
 
@@ -11,7 +18,6 @@ public class Global extends GlobalSettings {
 
         String modelDir = "trainedDir";
         String statDir = "trainedDir";
-
 
         try {
             IEvaluator evaluator = ImsWrapper.getEvaluator(); // this initliases the evalutor for first time
@@ -25,6 +31,26 @@ public class Global extends GlobalSettings {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+
+        // initial JWordNet
+        try {
+            CJWNL.initial(new FileInputStream("lib/prop.xml"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to initialise due to missing file", e);
+        } catch (JWNLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to initialise due to JWNL exception", e);
+        }
+
+        try {
+            COpenNLPPOSTagger.setDefaultModel("lib/tag.bin.gz");
+            COpenNLPPOSTagger.setDefaultPOSDictionary("lib/tagdict.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Problem initialising COpenNLPPostTagger", e);
+        }
+
 
     }
 

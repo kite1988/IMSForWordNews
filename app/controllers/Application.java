@@ -271,14 +271,7 @@ public class Application extends Controller {
         }
 
         try {
-            CTester senseDisambiguator = new CTester();
-
-            senseDisambiguator.setEvaluator(ImsWrapper.getEvaluator());
-            senseDisambiguator.setWriter(ImsWrapper.getWriter());
-
-            senseDisambiguator.setFeatureExtractorName(
-                    CAllWordsFeatureExtractorCombination.class.getName()
-            );
+            CTester senseDisambiguator = getSenseDisambiguator();
 
             senseDisambiguator.test(testFileName);
 
@@ -307,7 +300,7 @@ public class Application extends Controller {
                                     .put("pronunciation", chineseResult.pronunciation)
                                     .put("isTest", 0);
 
-                    result.put(instanceId.split("\\.")[0], tokenNode);
+                    result.set(instanceId.split("\\.")[0], tokenNode);
                 }
             }
 
@@ -316,6 +309,18 @@ public class Application extends Controller {
         }
 
         return ok(result);
+    }
+
+    private CTester getSenseDisambiguator() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        CTester senseDisambiguator = new CTester();
+
+        senseDisambiguator.setEvaluator(ImsWrapper.getEvaluator());
+        senseDisambiguator.setWriter(ImsWrapper.getWriter());
+        senseDisambiguator.setFeatureExtractorName(
+                CAllWordsFeatureExtractorCombination.class.getName()
+        );
+
+        return senseDisambiguator;
     }
 
     private void handleResultsDir(ObjectNode result, File[] filesInDirectory) throws IOException, SQLException {
@@ -329,9 +334,8 @@ public class Application extends Controller {
                     new FileReader(fileInDirectory));
 
             String lineFromResultFile;
-            int fileLen = 0;
             while ((lineFromResultFile = bufferedReader.readLine()) != null) {
-                fileLen++;
+
                 String[] tokensInResultsLine = lineFromResultFile.split(" ");
                 long senseId = -1;
                 try {
@@ -345,7 +349,7 @@ public class Application extends Controller {
                     tokenNode.put("pronunciation", chineseResult.pronunciation);
                     tokenNode.put("isTest", 0);
 
-                    result.put(tokensInResultsLine[1].split("\\.")[0], tokenNode);
+                    result.set(tokensInResultsLine[1].split("\\.")[0], tokenNode);
                 } catch (NumberFormatException e) {
                     // silenced because it is U
                     assert tokensInResultsLine[2].equals("U");

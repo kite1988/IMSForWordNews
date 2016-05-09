@@ -1,24 +1,20 @@
 package controllers;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.didion.jwnl.JWNLException;
-import play.*;
 import play.libs.Json;
 import play.mvc.*;
-import play.api.db.*;
 
 import play.mvc.Result;
 import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
 import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombination;
-import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombinationWithSenna;
-import sg.edu.nus.comp.nlp.ims.feature.SennaWordEmbeddings;
 import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
 import sg.edu.nus.comp.nlp.ims.lexelt.CResultInfo;
 import sg.edu.nus.comp.nlp.ims.util.CJWNL;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
 import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
-import sg.edu.nus.comp.nlp.ims.util.CSurroundingWordFilter;
+
+import util.ImsWrapper;
 import views.html.*;
 
 import org.w3c.dom.*;
@@ -28,7 +24,6 @@ import sg.edu.nus.comp.nlp.ims.implement.CTester;
 import sg.edu.nus.comp.nlp.ims.classifiers.IEvaluator;
 import sg.edu.nus.comp.nlp.ims.io.IResultWriter;
 
-import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -90,9 +85,9 @@ public class Application extends Controller {
     }
 
     private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
-        final int chineseIdOffset = 0; // set to non-zero if there are differences between the local db and db on heroku
+        final int offset = 0; // set to non-zero if there are differences between the local db and db on heroku
 
-        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + chineseIdOffset) + "'";
+        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + offset) + "'";
 
         try (
                 Connection conn = play.db.DB.getConnection()
@@ -101,16 +96,14 @@ public class Application extends Controller {
                     Statement stmt = conn.createStatement()
             )  {
                 stmt.executeQuery(sql);
-                ResultSet queryRes = stmt.getResultSet();
+                ResultSet results = stmt.getResultSet();
 
-                if (queryRes.next()) {
-                    ChinesePronunciationPair result = new ChinesePronunciationPair();
-
-                    result.symbol = queryRes.getString("chinese_meaning");
-                    result.pronunciation = queryRes.getString("pronunciation");
-                    return result;
+                if (stmt.getResultSet().next()) {
+                    return new ChinesePronunciationPair(
+                            results.getString("chinese_meaning"),
+                            results.getString("pronunciation")
+                    );
                 }
-
             }
         }
 
@@ -121,7 +114,12 @@ public class Application extends Controller {
         String symbol;
         String pronunciation;
 
-        public static ChinesePronunciationPair NONE = new ChinesePronunciationPair();
+        public ChinesePronunciationPair(String pronunciation, String symbol) {
+            this.pronunciation = pronunciation;
+            this.symbol = symbol;
+        }
+
+        public static ChinesePronunciationPair NONE = new ChinesePronunciationPair("", "");
     }
 
 
@@ -163,7 +161,6 @@ public class Application extends Controller {
         String name = values.get("name")[0];
         String url = values.get("url")[0];
         String num_words = values.get("num_words")[0];
-        System.out.println("start with ... " + textContent + " to find " + num_words + " words");
 
         int numWords;
         try {
@@ -183,7 +180,6 @@ public class Application extends Controller {
                 if (//!CSurroundingWordFilter.getInstance().filter(token.toLowerCase())
                        // &&
                         isWordInDictionary(token.toLowerCase())) {
-                    System.out.print(token + " , ");
                     wordsThatCanBeTranslated.add(token);
                     if (wordsThatCanBeTranslated.size() >= numWords) {
                         break;
@@ -326,11 +322,11 @@ public class Application extends Controller {
 
 
         try {
-            IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName)
-                    .newInstance();
+            //IEvaluator evaluator = (IEvaluator) Class.forName(evaluatorName)
+            //        .newInstance();
 
-            evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
-
+            //evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
+            IEvaluator evaluator = ImsWrapper.getEvaluator();
 
             // set result writer
             writerName = CResultWriter.class.getName();

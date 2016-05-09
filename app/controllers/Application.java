@@ -98,7 +98,7 @@ public class Application extends Controller {
                 stmt.executeQuery(sql);
                 ResultSet results = stmt.getResultSet();
 
-                if (stmt.getResultSet().next()) {
+                if (results.next()) {
                     return new ChinesePronunciationPair(
                             results.getString("chinese_meaning"),
                             results.getString("pronunciation")
@@ -114,7 +114,7 @@ public class Application extends Controller {
         String symbol;
         String pronunciation;
 
-        public ChinesePronunciationPair(String pronunciation, String symbol) {
+        public ChinesePronunciationPair(String symbol, String pronunciation) {
             this.pronunciation = pronunciation;
             this.symbol = symbol;
         }

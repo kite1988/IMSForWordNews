@@ -271,9 +271,18 @@ public class Application extends Controller {
         }
 
         try {
-            ImsWrapper.disambiguator.test(testFileName);
+            CTester senseDisambiguator = new CTester();
 
-            List<Object> results = ImsWrapper.disambiguator.getResults();
+            senseDisambiguator.setEvaluator(ImsWrapper.getEvaluator());
+            senseDisambiguator.setWriter(ImsWrapper.getWriter());
+
+            senseDisambiguator.setFeatureExtractorName(
+                    CAllWordsFeatureExtractorCombination.class.getName()
+            );
+
+            senseDisambiguator.test(testFileName);
+
+            List<Object> results = senseDisambiguator.getResults();
             for (Object resultObj : results) {
                 CResultInfo imsResult = (CResultInfo)resultObj;
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {

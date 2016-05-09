@@ -1,18 +1,13 @@
 package controllers;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import net.didion.jwnl.JWNLException;
+import org.apache.commons.lang3.StringUtils;
 import play.libs.Json;
 import play.mvc.*;
 
 import play.mvc.Result;
-import sg.edu.nus.comp.nlp.ims.classifiers.CLibLinearEvaluator;
 import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombination;
-import sg.edu.nus.comp.nlp.ims.io.CResultWriter;
 import sg.edu.nus.comp.nlp.ims.lexelt.CResultInfo;
-import sg.edu.nus.comp.nlp.ims.util.CJWNL;
-import sg.edu.nus.comp.nlp.ims.util.COpenNLPPOSTagger;
-import sg.edu.nus.comp.nlp.ims.util.COpenNLPSentenceSplitter;
 
 import util.ImsWrapper;
 import views.html.*;
@@ -21,8 +16,6 @@ import org.w3c.dom.*;
 
 
 import sg.edu.nus.comp.nlp.ims.implement.CTester;
-import sg.edu.nus.comp.nlp.ims.classifiers.IEvaluator;
-import sg.edu.nus.comp.nlp.ims.io.IResultWriter;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -67,10 +60,9 @@ public class Application extends Controller {
         }
     }
 
-    private ChinesePronunciationPair getChineseFromId(Long chineseId) throws SQLException {
+    private ChinesePronunciationPair getChinesePinyinPairFromId(Long chineseId) throws SQLException {
         final int offset = 0; // set to non-zero if there are differences between the local db and db on heroku
 
-        String sql = "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + offset) + "'";
 
         try (
                 Connection conn = play.db.DB.getConnection()
@@ -78,7 +70,9 @@ public class Application extends Controller {
             try (
                     Statement stmt = conn.createStatement()
             )  {
-                stmt.executeQuery(sql);
+                stmt.executeQuery(
+                        "SELECT chinese_meaning, pronunciation FROM chinese_words WHERE id = '" + (chineseId + offset) + "'"
+                );
                 ResultSet results = stmt.getResultSet();
 
                 if (results.next()) {
@@ -279,14 +273,12 @@ public class Application extends Controller {
         try {
             CTester senseDisambiguator = new CTester();
 
-            IEvaluator evaluator = ImsWrapper.getEvaluator();
-            IResultWriter writer = ImsWrapper.getWriter();
+            senseDisambiguator.setEvaluator(ImsWrapper.getEvaluator());
+            senseDisambiguator.setWriter(ImsWrapper.getWriter());
 
-            senseDisambiguator.setEvaluator(evaluator);
-            senseDisambiguator.setWriter(writer);
-
-            String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
-            senseDisambiguator.setFeatureExtractorName(featureExtractorName);
+            senseDisambiguator.setFeatureExtractorName(
+                    CAllWordsFeatureExtractorCombination.class.getName()
+            );
 
             senseDisambiguator.test(testFileName);
 
@@ -298,27 +290,29 @@ public class Application extends Controller {
                     String instanceId = imsResult.getID(instIdx);
                     String id = imsResult.classes[imsResult.getAnswer(instIdx)];
 
-                    try {
-                        long senseId = Long.parseLong(id);
-                        ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
-
-                        ObjectNode tokenNode =
-                                Json.newObject()
-                                        .put("wordId", senseId)
-                                        .put("chinese", chineseResult.symbol)
-                                        .put("pronunciation", chineseResult.pronunciation)
-                                        .put("isTest", 0);
-
-                        result.put(instanceId.split("\\.")[0], tokenNode);
-                    } catch (NumberFormatException e) {
-                        // silenced because it is U
-                        assert id.equals("U");
+                    long senseId;
+                    if (StringUtils.isNumeric(id)) {
+                        senseId = Long.parseLong(id);
+                    } else if (id.equals("U")) {
+                        continue;
+                    } else {
+                        throw new Exception("Id is not a number or U :" + id);
                     }
+                    ChinesePronunciationPair chineseResult = getChinesePinyinPairFromId(senseId);
+
+                    ObjectNode tokenNode =
+                            Json.newObject()
+                                    .put("wordId", senseId)
+                                    .put("chinese", chineseResult.symbol)
+                                    .put("pronunciation", chineseResult.pronunciation)
+                                    .put("isTest", 0);
+
+                    result.put(instanceId.split("\\.")[0], tokenNode);
                 }
             }
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error disambiguating", e);
         }
 
         return ok(result);
@@ -343,7 +337,7 @@ public class Application extends Controller {
                 try {
                     senseId = Long.parseLong(tokensInResultsLine[2]);
 
-                    ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
+                    ChinesePronunciationPair chineseResult = getChinesePinyinPairFromId(senseId);
 
                     ObjectNode tokenNode = Json.newObject();
                     tokenNode.put("wordId", senseId);

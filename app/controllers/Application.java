@@ -146,13 +146,17 @@ public class Application extends Controller {
             }
         }
 
-        return ok(index.render(files.toString()));
+        return ok(
+                index.render(
+                        files.toString()
+                )
+        );
     }
 
 
     public Result obtainTranslation() throws Exception {
 
-        long startTime = System.currentTimeMillis();
+        long startTime = System.nanoTime();
         // extract request params
         final Map<String, String[]> values = request()
                 .body()
@@ -294,7 +298,7 @@ public class Application extends Controller {
 
         // run tester
 
-        CTester tester = new CTester();
+        CTester senseDisambiguator = new CTester();
         String type = "file";
 
         String modelDir = "trainedDir";
@@ -329,24 +333,26 @@ public class Application extends Controller {
             IEvaluator evaluator = ImsWrapper.getEvaluator();
 
             // set result writer
-            writerName = CResultWriter.class.getName();
+            //writerName = CResultWriter.class.getName();
 
-            IResultWriter writer = (IResultWriter) Class.forName(writerName)
-                    .newInstance();
-            writer.setOptions(new String[]{"-s", saveDir});
+            //IResultWriter writer = (IResultWriter) Class.forName(writerName)
+            //        .newInstance();
+            //writer.setOptions(new String[]{"-s", saveDir});
 
-            tester.setEvaluator(evaluator);
-            tester.setWriter(writer);
+            IResultWriter writer = ImsWrapper.getWriter();
+
+            senseDisambiguator.setEvaluator(evaluator);
+            senseDisambiguator.setWriter(writer);
 
             String featureExtractorName = CAllWordsFeatureExtractorCombination.class.getName();
-            tester.setFeatureExtractorName(featureExtractorName);
+            senseDisambiguator.setFeatureExtractorName(featureExtractorName);
 
             COpenNLPSentenceSplitter.setDefaultModel("lib/EnglishSD.bin.gz");
 
 
-            tester.test(testFileName);
+            senseDisambiguator.test(testFileName);
 
-            List<Object> results = (List<Object>)tester.getResults();
+            List<Object> results = (List<Object>)senseDisambiguator.getResults();
             for (Object thing : results) {
                 CResultInfo imsResult = (CResultInfo)thing;
                 for (int instIdx = 0; instIdx < imsResult.size(); instIdx++) {

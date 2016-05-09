@@ -16,6 +16,8 @@ public class Global extends GlobalSettings {
         try {
             IEvaluator evaluator = ImsWrapper.getEvaluator(); // this initliases the evalutor for first time
             evaluator.setOptions(new String[]{"-m", modelDir, "-s", statDir});
+
+            ImsWrapper.getWriter(); // init
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {

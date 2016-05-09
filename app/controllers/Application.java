@@ -131,28 +131,28 @@ public class Application extends Controller {
                 new File("trainedDir").listFiles()
         );
 
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(
-                    new GZIPInputStream(
-                        new FileInputStream(
-                                files.get(0)
-                        )
-                    ), "ISO8859-1")
-        );
+        try (
+                BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(
+                        new GZIPInputStream(
+                            new FileInputStream(
+                                    files.get(0)
+                            )
+                        ), "ISO8859-1")
+                )
+        ) {
 
-        String line ;
-        int count = 0;
-        while ((line = reader.readLine()) != null) {
-            count ++;
+            int count = 0;
+            while (reader.readLine() != null) {
+                count++;
+            }
         }
-
-        reader.close();
 
         return ok(index.render(files.toString()));
     }
 
 
-    public Result obtainTranslation() throws SQLException, ParserConfigurationException, TransformerException, IOException, JWNLException {
+    public Result obtainTranslation() throws Exception {
 
         long startTime = System.currentTimeMillis();
         // extract request params
@@ -294,20 +294,6 @@ public class Application extends Controller {
         }
 
 
-    /*    try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testFileName))) {
-
-            String lineInFile;
-            while ((lineInFile = tempFileReader.readLine()) != null) {
-
-
-                System.out.println(lineInFile);
-
-
-            }
-            System.out.println(" in file : " + testFileName);
-            System.out.println("         : " + new File(testFileName).getAbsolutePath());
-        }*/
-
         // key file.... doesn't matter
 
         // run tester
@@ -379,8 +365,7 @@ public class Application extends Controller {
                         ObjectNode tokenNode = Json.newObject();
                         tokenNode.put("wordId", senseId);
                         tokenNode.put("chinese", chineseResult.symbol);
-                        System.out.println("result of " + instanceId);
-                        System.out.println(chineseResult.symbol);
+
                         tokenNode.put("pronunciation", chineseResult.pronunciation);
                         tokenNode.put("isTest", 0);
 
@@ -414,16 +399,11 @@ public class Application extends Controller {
             String lineFromResultFile;
             int fileLen = 0;
             while ((lineFromResultFile = bufferedReader.readLine()) != null) {
-                System.out.println(lineFromResultFile);
-                System.out.println("=====================================");
-
-
                 fileLen++;
                 String[] tokensInResultsLine = lineFromResultFile.split(" ");
                 long senseId = -1;
                 try {
                     senseId = Long.parseLong(tokensInResultsLine[2]);
-                 //   result.put("senseid", senseId);
 
                     ChinesePronunciationPair chineseResult = getChineseFromId(senseId);
 
@@ -439,8 +419,6 @@ public class Application extends Controller {
                     assert tokensInResultsLine[2].equals("U");
                 }
             }
-
-            System.out.println("len: " + fileLen);
 
             fileInDirectory.delete();
         }

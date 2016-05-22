@@ -214,66 +214,60 @@ public class Application extends Controller {
             context.setTextContent(" " + amendedTextContent + " ");
         }
 
-        int randomNumber = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
-        String testTempFileName = "temptestfile" + randomNumber;
+
         // write to xml
+        String xmlFormat = "";
         try {
             Transformer tr = TransformerFactory.newInstance().newTransformer();
+            StreamResult xmlStringResult = new StreamResult(new StringWriter());
             tr.setOutputProperty(OutputKeys.INDENT, "yes");
             tr.setOutputProperty(OutputKeys.METHOD, "xml");
             tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
 
             // send DOM to file
 
-            tr.transform(new DOMSource(doc),
-                         new StreamResult(
-                                 new FileOutputStream(testTempFileName)
-                         )
-            );
+            tr.transform(new DOMSource(doc), xmlStringResult);
+            xmlFormat = xmlStringResult.getWriter().toString();
 
         } catch (TransformerException te) {
             System.out.println(te.getMessage());
             throw te;
-        } catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
-            throw ioe;
         }
 
-        // todo use filelock
+
         // write to format expected by ims
-        String testFileName = testTempFileName + "_test.xml" ;
-        try (BufferedReader tempFileReader = new BufferedReader(new FileReader(testTempFileName))) {
-            try (BufferedWriter testFileWriter = new BufferedWriter(new FileWriter(testFileName))) {
-                String lineInFile;
-                while ((lineInFile = tempFileReader.readLine()) != null) {
 
-                    if (lineInFile.contains(testFlag)) {
-                        StringBuilder updatedLine = new StringBuilder();
 
-                        String[] lineInFileAsTokens = lineInFile.split(" ");
-                        for (String tokenInFile : lineInFileAsTokens) {
-                            if (tokenInFile.contains(testFlag)) {
-                                String targetToken = tokenInFile.split(testFlag)[1];
-                                updatedLine.append("<head>" + targetToken + "</head>");
-                            } else {
-                                updatedLine.append(tokenInFile);
-                            }
-                            updatedLine.append(' ');
-                        }
+        StringBuilder imsFormat = new StringBuilder();
+        for (String lineInFile : xmlFormat.split("\n")) {
 
-                        testFileWriter.write(updatedLine.toString());
+            if (lineInFile.contains(testFlag)) {
+                StringBuilder updatedLine = new StringBuilder();
+
+                String[] lineInFileAsTokens = lineInFile.split(" ");
+                for (String tokenInFile : lineInFileAsTokens) {
+                    if (tokenInFile.contains(testFlag)) {
+                        String targetToken = tokenInFile.split(testFlag)[1];
+                        updatedLine.append("<head>" + targetToken + "</head>");
                     } else {
-                        testFileWriter.write(lineInFile);
+                        updatedLine.append(tokenInFile);
                     }
-
+                    updatedLine.append(' ');
                 }
+
+                imsFormat.append(updatedLine.toString());
+            } else {
+                imsFormat.append(lineInFile);
             }
+
         }
+
 
         try {
             CTester senseDisambiguator = getSenseDisambiguator();
 
-            senseDisambiguator.test(testFileName);
+            //senseDisambiguator.test(testFileName);
+            senseDisambiguator.testWithXmlString(imsFormat.toString(), null);
 
             List<Object> results = senseDisambiguator.getResults();
             for (Object resultObj : results) {

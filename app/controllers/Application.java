@@ -37,8 +37,7 @@ import java.util.zip.GZIPInputStream;
 
 
 public class Application extends Controller {
-
-
+    
     public Result index() {
         return ok(index.render("WordNews!"));
     }
@@ -97,37 +96,6 @@ public class Application extends Controller {
         }
 
         public static ChinesePronunciationPair NONE = new ChinesePronunciationPair("", "");
-    }
-
-
-    public Result showTrainedDir() throws IOException {
-
-        List<File> files = Arrays.asList(
-                new File("trainedDir").listFiles()
-        );
-
-        try (
-                BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(
-                        new GZIPInputStream(
-                            new FileInputStream(
-                                    files.get(0)
-                            )
-                        ), "ISO8859-1")
-                )
-        ) {
-
-            int count = 0;
-            while (reader.readLine() != null) {
-                count++;
-            }
-        }
-
-        return ok(
-                index.render(
-                        files.toString()
-                )
-        );
     }
 
 

@@ -106,6 +106,11 @@ public class Application extends Controller {
         final Map<String, String[]> values = request()
                 .body()
                 .asFormUrlEncoded();
+        if( values.get("text") == null || values.get("name") == null || values.get("url") == null || values.get("num_words") == null ) {
+            ObjectNode bad_request_result = Json.newObject();
+            bad_request_result.put("msg", "Invalid parameters");
+            return badRequest(bad_request_result);
+        }
         String textContent = values.get("text")[0];
         String name = values.get("name")[0];
         String url = values.get("url")[0];
@@ -230,6 +235,7 @@ public class Application extends Controller {
 
         }
 
+        ObjectNode translated_text = Json.newObject();
 
         try {
             CTester senseDisambiguator = getSenseDisambiguator();
@@ -257,18 +263,21 @@ public class Application extends Controller {
 
                     ObjectNode tokenNode =
                             Json.newObject()
-                                    .put("wordId", senseId)
+                                    .put("wordID", senseId)
                                     .put("chinese", chineseResult.symbol)
                                     .put("pronunciation", chineseResult.pronunciation)
                                     .put("isTest", 0);
 
-                    result.set(instanceId.split("\\.")[0], tokenNode);
+                    translated_text.set(instanceId.split("\\.")[0], tokenNode);
                 }
             }
 
         } catch (Exception e) {
             throw new RuntimeException("Error disambiguating", e);
         }
+
+        result.put("msg", "OK");
+        result.set("translate_text", translated_text);
 
         return ok(result);
     }
@@ -306,7 +315,7 @@ public class Application extends Controller {
                     ChinesePronunciationPair chineseResult = getChinesePinyinPairFromId(senseId);
 
                     ObjectNode tokenNode = Json.newObject();
-                    tokenNode.put("wordId", senseId);
+                    tokenNode.put("wordID", senseId);
                     tokenNode.put("chinese", chineseResult.symbol);
                     tokenNode.put("pronunciation", chineseResult.pronunciation);
                     tokenNode.put("isTest", 0);

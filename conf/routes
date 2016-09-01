@@ -4,9 +4,8 @@
 
 # Home page
 GET     /                           controllers.Application.index()
-POST     /show                      controllers.Application.obtainTranslation()
-GET     /show                      controllers.Application.obtainTranslation()
-#POST    /translate_word             controllers.Application.translateWord()
+POST     /translate_word                      controllers.Application.translateWord()
+GET     /translate_word                      controllers.Application.translateWord()
 GET /test							 controllers.Application.test()
 POST /test							 controllers.Application.test()
 

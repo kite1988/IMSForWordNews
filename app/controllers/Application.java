@@ -58,9 +58,8 @@ public class Application extends Controller {
     }
 
 
-    public Result obtainTranslation() {
+    public Result translateWord() {
         response().setHeader("Access-Control-Allow-Origin", "*"); 
-
 
         long startTime = System.nanoTime();
         // extract request params

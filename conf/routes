@@ -8,7 +8,7 @@ POST     /translate_word                      controllers.Application.translateW
 GET     /translate_word                      controllers.Application.translateWord()
 GET /test							 controllers.Application.test()
 POST /test							 controllers.Application.test()
-
+POST /test2							 controllers.Application.test2()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

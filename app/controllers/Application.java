@@ -6,19 +6,20 @@ import play.libs.Json;
 import play.libs.Json.*;                        
 import play.mvc.*;
 import play.mvc.BodyParser;                     
-
-
 import play.mvc.Result;
+import com.fasterxml.jackson.databind.JsonNode;
+
+
 import sg.edu.nus.comp.nlp.ims.feature.CAllWordsFeatureExtractorCombination;
 import sg.edu.nus.comp.nlp.ims.lexelt.CResultInfo;
+import sg.edu.nus.comp.nlp.ims.implement.CTester;
+
 
 import util.ImsWrapper;
 import views.html.*;
 
 import org.w3c.dom.*;
 
-
-import sg.edu.nus.comp.nlp.ims.implement.CTester;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -50,7 +51,23 @@ public class Application extends Controller {
     public Result test() {
         response().setHeader("Access-Control-Allow-Origin", "*"); 
 
+        System.out.println(request());
+
         System.out.println("test");
+        ObjectNode result = Json.newObject();
+        result.put("msg", "ok");
+        result.put("translation", "中文");
+        return ok(result);
+    }
+
+    public Result test2() {
+        response().setHeader("Access-Control-Allow-Origin", "*"); 
+        JsonNode json = request().body().asJson();
+        System.out.println(request());
+        System.out.println(json);
+        System.out.println(json.findPath("word").textValue());
+        System.out.println(json.findPath("sentence").textValue());
+
         ObjectNode result = Json.newObject();
         result.put("msg", "ok");
         result.put("translation", "中文");
@@ -59,29 +76,33 @@ public class Application extends Controller {
 
 
     public Result translateWord() {
-        response().setHeader("Access-Control-Allow-Origin", "*"); 
-
         long startTime = System.nanoTime();
-        // extract request params
-        final Map<String, String[]> values = request().body().asFormUrlEncoded();
-		
-		System.out.println(request().body());
-				
-        if( values==null || values.get("word") == null || values.get("sentence") == null ) {
+
+        response().setHeader("Access-Control-Allow-Origin", "*"); 
+        System.out.println(request().body());
+
+        String word = null;
+        String sentence = null;
+
+
+        JsonNode json = request().body().asJson();
+        if(json!=null) {
+            word = json.findPath("word").textValue();
+            sentence = json.findPath("sentence").textValue();
+         } else {
+            Map<String, String[]> values = request().body().asFormUrlEncoded();
+            if (values!=null) {
+                word = values.get("word")[0];
+                sentence = values.get("sentence")[0];
+            }
+         }
+        
+        if(word==null || sentence==null || sentence.indexOf(testFlag)<0) {
              ObjectNode bad_request_result = Json.newObject();
              bad_request_result.put("msg", "Invalid parameters");
-             //return badRequest(bad_request_result);
              return ok(bad_request_result);
-         }
+        } 
 
-        if(values==null) {
-            ObjectNode bad_request_result = Json.newObject();
-            bad_request_result.put("msg", "Invalid parameters");
-            return ok(bad_request_result);
-        }
-        
-        String word = values.get("word")[0];
-        String sentence = values.get("sentence")[0];
      
         ObjectNode result = Json.newObject();
         String translated_text = null;
